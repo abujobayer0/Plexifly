@@ -21,7 +21,7 @@ export const Item = ({ name, imageUrl, id }: ItemsProps) => {
   };
 
   return (
-    <div className="aspect-square relative">
+    <div className="aspect-square relative flex justify-center items-center  bg-white rounded-lg">
       <Hint lablel={name} alignOffset={18} side="right">
         <Image
           src={imageUrl}
