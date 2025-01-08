@@ -20,6 +20,7 @@ export const ConvexClientProvider: React.FC<ConvexClientProviderProps> = ({
     <ClerkProvider>
       <ConvexProviderWithClerk useAuth={useAuth} client={convex}>
         <Authenticated>{children}</Authenticated>
+        <SignInButton />
         <AuthLoading>
           <Loading></Loading>
         </AuthLoading>

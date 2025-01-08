@@ -1,4 +1,4 @@
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
 const images = [
@@ -119,15 +119,24 @@ export const unfavorite = mutation({
     if (!board) throw new Error("Board not found");
     const existingFavorites = await ctx.db
       .query("userFavorites")
-      .withIndex(
-        "by_user_board",
-        (q) => q.eq("userId", identity.subject).eq("boardId", board._id)
-        //Check if org id needs
+      .withIndex("by_user_board", (q) =>
+        q.eq("userId", identity.subject).eq("boardId", board._id)
       )
       .unique();
 
     if (!existingFavorites) throw new Error("Board not found in favorites");
     await ctx.db.delete(existingFavorites._id);
+    return board;
+  },
+});
+
+export const get = query({
+  args: {
+    id: v.id("boards"),
+  },
+  handler: async (ctx, args) => {
+    const board = await ctx.db.get(args.id);
+    if (!board) throw new Error("Board not found");
     return board;
   },
 });
