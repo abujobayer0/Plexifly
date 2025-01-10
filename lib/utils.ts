@@ -7,18 +7,11 @@ export function cn(...inputs: ClassValue[]) {
 }
 const COLORS = [
   "#FF5733", // Red Orange
-  "#33FF57", // Spring Green
-  "#3357FF", // Blue
   "#5733FF", // Electric Violet
   "#FF8C00", // Dark Orange
   "#FFD700", // Gold
   "#228B22", // Forest Green
-  "#4B0082", // Indigo
-  "#6A5ACD", // Slate Blue
-  "#7B68EE", // Medium Slate Blue
   "#8B008B", // Dark Magenta
-  "#800080", // Purple
-  "#9932CC", // Dark Orchid
   "#FF3366", // Strawberry Red
   "#FF00FF", // Magenta
   "#FF9F00", // Amber
