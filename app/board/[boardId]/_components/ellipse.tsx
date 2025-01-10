@@ -1,21 +1,20 @@
-import { colorToCss } from "@/lib/utils";
-import { RectangleLayer } from "@/types/canvas";
+import { EllipseLayer, RectangleLayer } from "@/types/canvas";
 
-interface RectangleProps {
+interface EllipseProps {
   id: string;
-  layer: RectangleLayer;
+  layer: EllipseLayer;
   onPointerDown: (e: React.PointerEvent, id: string) => void;
   selectionColor?: string;
 }
 
 import React from "react";
 
-export const Rectangle = ({
+export const Ellipse = ({
   id,
   layer,
   onPointerDown,
   selectionColor,
-}: RectangleProps) => {
+}: EllipseProps) => {
   const { x, y, width, height, fill } = layer;
 
   return (
@@ -30,8 +29,8 @@ export const Rectangle = ({
       width={width}
       height={height}
       strokeWidth={1}
-      stroke={selectionColor || "transparent"}
-      fill={fill ? colorToCss(fill) : "#ccc"}
+      fill={selectionColor || "#000"}
+      stroke="transparent"
     />
   );
 };
