@@ -36,6 +36,7 @@ import { LiveObject } from "@liveblocks/client";
 import { LayerPreview } from "./layer-preview";
 import Loading from "./loading";
 import { SelectionBox } from "./selection-box";
+import { SelectionTools } from "./selection-tools";
 
 const MAX_LAYERS = 1000;
 
@@ -269,7 +270,7 @@ export default function Canvas({ boardId }: CanvasProps) {
         undo={history.undo}
         redo={history.redo}
       />
-
+      <SelectionTools camera={camera} setLastUsedColor={setLastUsedColor} />
       <svg
         className="h-[100vh] w-[100vw]"
         onWheel={onWheel}

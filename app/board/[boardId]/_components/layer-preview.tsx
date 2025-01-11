@@ -1,4 +1,5 @@
 "use client";
+
 import { LayerType } from "@/types/canvas";
 import { useStorage } from "@liveblocks/react";
 import React, { memo } from "react";
@@ -32,7 +33,7 @@ export const LayerPreview = memo(
             id={id}
             onPointerDown={onLayerPointerDown}
             layer={layer}
-            selectionColor="#000"
+            selectionColor={selectionColor}
           />
         );
       case LayerType.Note:
