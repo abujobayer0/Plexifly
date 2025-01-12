@@ -46,6 +46,7 @@ export async function POST(request: Request) {
 
     return new Response(body, { status });
   } catch (error) {
+    console.error("Error during session authorization:", error);
     return new Response("Error during session authorization", { status: 500 });
   }
 }
