@@ -5,6 +5,10 @@ import { useStorage } from "@liveblocks/react";
 import React, { memo } from "react";
 import { Rectangle } from "./rectangle";
 import { Ellipse } from "./ellipse";
+import { Text } from "./text";
+import { Note } from "./note";
+import Path from "./path";
+import { colorToCss } from "@/lib/utils";
 
 interface LayerPreviewProps {
   id: string;
@@ -37,11 +41,35 @@ export const LayerPreview = memo(
           />
         );
       case LayerType.Note:
-        return <div>Note</div>;
+        return (
+          <Note
+            id={id}
+            onPointerDown={onLayerPointerDown}
+            layer={layer}
+            selectionColor={selectionColor}
+          />
+        );
       case LayerType.Text:
-        return <div>Text</div>;
+        return (
+          <Text
+            id={id}
+            onPointerDown={onLayerPointerDown}
+            layer={layer}
+            selectionColor={selectionColor}
+          />
+        );
       case LayerType.Path:
-        return <div>Path</div>;
+        return (
+          <Path
+            key={id}
+            onPointerDown={(e) => onLayerPointerDown(e, id)}
+            points={layer.points}
+            stroke={selectionColor}
+            x={layer.x}
+            y={layer.y}
+            fill={layer.fill ? colorToCss(layer.fill) : "#000"}
+          />
+        );
 
       default: {
         console.warn("Unknown layer type");

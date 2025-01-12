@@ -21,7 +21,12 @@ export function Room({ children, roomId, fallback }: RoomProps) {
           layers: new LiveMap<string, LiveObject<Layer>>(),
           layerIds: new LiveList<string>([]),
         }}
-        initialPresence={{ cursor: null, selection: [] }}
+        initialPresence={{
+          cursor: null,
+          selection: [],
+          pencilDraft: null,
+          penColor: null,
+        }}
         id={roomId}
       >
         <ClientSideSuspense fallback={fallback}>
