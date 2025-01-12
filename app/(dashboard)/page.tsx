@@ -1,16 +1,10 @@
 "use client";
-
 import React from "react";
 import { EmptyOrg } from "./_components/empty-org";
 import { useOrganization } from "@clerk/nextjs";
 import { BoardList } from "./_components/board-list";
-interface DashboardPageProps {
-  searchParams: {
-    search?: string;
-    favorites?: string;
-  };
-}
-const DashboardPage = ({ searchParams }: DashboardPageProps) => {
+
+const DashboardPage = () => {
   const { organization } = useOrganization();
 
   return (

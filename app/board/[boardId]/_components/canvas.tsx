@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Info from "./info";
 import Participants from "./participants";
 import Toolbar from "./toolbar";
@@ -42,6 +42,8 @@ import Loading from "./loading";
 import { SelectionBox } from "./selection-box";
 import { SelectionTools } from "./selection-tools";
 import Path from "./path";
+import { useDisableScrollBounce } from "@/hooks/use-disable-scroll-bounce";
+import { useDeleteLayers } from "@/hooks/use-delete-layers";
 
 const MAX_LAYERS = 1000;
 
@@ -65,6 +67,7 @@ export default function Canvas({ boardId }: CanvasProps) {
     b: 255,
   });
 
+  useDisableScrollBounce();
   const history = useHistory();
   const canUndo = useCanUndo();
   const canRedo = useCanRedo();
@@ -309,12 +312,9 @@ export default function Canvas({ boardId }: CanvasProps) {
     ]
   );
 
-  const onPointerLeave = useMutation(
-    ({ setMyPresence }, e: React.PointerEvent) => {
-      setMyPresence({ cursor: null });
-    },
-    []
-  );
+  const onPointerLeave = useMutation(({ setMyPresence }) => {
+    setMyPresence({ cursor: null });
+  }, []);
 
   const onLayerPointerDown = useMutation(
     ({ self, setMyPresence }, e: React.PointerEvent, layerId: string) => {
@@ -380,6 +380,28 @@ export default function Canvas({ boardId }: CanvasProps) {
     }
     return layerIdsToColorSelection;
   }, [selections]);
+
+  const deleteLayers = useDeleteLayers();
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      switch (e.key) {
+        case "z":
+          if (e.ctrlKey || e.metaKey) {
+            if (e.shiftKey || e.altKey) history.redo();
+            else history.undo();
+
+            break;
+          }
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [deleteLayers, history]);
 
   if (status === "connecting" || status === "reconnecting") {
     return <Loading />;

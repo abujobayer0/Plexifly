@@ -3,20 +3,21 @@ import Canvas from "./_components/canvas";
 import { Room } from "@/components/room";
 import Loading from "./_components/loading";
 
-interface BoardIdPageProps {
-  params: {
-    boardId?: string; // Optional to handle undefined gracefully
-  };
-}
-
-const BoardIdPage = async ({ params }: BoardIdPageProps) => {
+export default async function BoardIdPage({
+  params,
+}: {
+  params: Promise<{ boardId: string }>;
+}) {
+  // Await the params
   const { boardId } = await params;
 
+  if (!boardId) {
+    return <div>Error: Board not found</div>;
+  }
+
   return (
-    <Room roomId={boardId as string} fallback={<Loading />}>
-      <Canvas boardId={boardId as string} />
+    <Room roomId={boardId} fallback={<Loading />}>
+      <Canvas boardId={boardId} />
     </Room>
   );
-};
-
-export default BoardIdPage;
+}
