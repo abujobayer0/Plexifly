@@ -4,7 +4,7 @@ import React from "react";
 import { UserAvatar } from "./user-avatar";
 import { connectionIdToColor } from "@/lib/utils";
 
-const MAX_SHOWN_OTHER_USERS = 2;
+const MAX_SHOWN_OTHER_USERS = 10;
 
 export default function Participants() {
   const users = useOthers();
