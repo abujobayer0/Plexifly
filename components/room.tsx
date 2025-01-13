@@ -13,6 +13,7 @@ interface RoomProps {
   roomId: string;
   fallback: NonNullable<ReactNode> | null;
 }
+
 export function Room({ children, roomId, fallback }: RoomProps) {
   return (
     <LiveblocksProvider throttle={16} authEndpoint="/api/liveblocks-auth">
