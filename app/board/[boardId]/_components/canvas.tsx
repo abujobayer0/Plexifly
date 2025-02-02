@@ -46,6 +46,9 @@ import { useDisableScrollBounce } from "@/hooks/use-disable-scroll-bounce";
 import { useDeleteLayers } from "@/hooks/use-delete-layers";
 
 const MAX_LAYERS = 1000;
+const GRID_SIZE = 40;
+const MIN_ZOOM = 0.1;
+const MAX_ZOOM = 5;
 
 interface CanvasProps {
   boardId: string;
@@ -60,7 +63,7 @@ export default function Canvas({ boardId }: CanvasProps) {
     mode: CanvasMode.None,
   });
 
-  const [camera, setCamera] = useState<Camera>({ x: 0, y: 0 });
+  const [camera, setCamera] = useState<Camera>({ x: 0, y: 0, zoom: 1 });
   const [lastUsedColor, setLastUsedColor] = useState<Color>({
     r: 255,
     g: 255,
@@ -262,10 +265,23 @@ export default function Canvas({ boardId }: CanvasProps) {
   );
 
   const onWheel = useCallback((e: React.WheelEvent) => {
-    setCamera((camera) => ({
-      x: camera.x - e.deltaX,
-      y: camera.y - e.deltaY,
-    }));
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const delta = e.deltaY;
+      setCamera((camera) => ({
+        ...camera,
+        zoom: Math.min(
+          MAX_ZOOM,
+          Math.max(MIN_ZOOM, camera.zoom * (1 - delta / 500))
+        ),
+      }));
+    } else {
+      setCamera((camera) => ({
+        ...camera,
+        x: camera.x - e.deltaX,
+        y: camera.y - e.deltaY,
+      }));
+    }
   }, []);
 
   const onPointerDown = useCallback(
@@ -430,7 +446,36 @@ export default function Canvas({ boardId }: CanvasProps) {
         onPointerMove={onPointerMove}
         onPointerLeave={onPointerLeave}
       >
-        <g style={{ transform: `translate(${camera.x}, ${camera.y})` }}>
+        <g
+          style={{
+            transform: `translate(${camera.x}px, ${camera.y}px) scale(${camera.zoom})`,
+          }}
+        >
+          <defs>
+            <pattern
+              id="grid"
+              width={GRID_SIZE}
+              height={GRID_SIZE}
+              patternUnits="userSpaceOnUse"
+            >
+              <path
+                d={`M ${GRID_SIZE} 0 L 0 0 0 ${GRID_SIZE}`}
+                fill="none"
+                stroke="rgba(0,0,0,0.1)"
+                strokeWidth="1"
+              />
+            </pattern>
+          </defs>
+
+          <rect
+            width="100%"
+            height="100%"
+            fill="url(#grid)"
+            x={-GRID_SIZE * 100}
+            y={-GRID_SIZE * 100}
+            style={{ width: GRID_SIZE * 200, height: GRID_SIZE * 200 }}
+          />
+
           {layerIds?.map((layerId) => (
             <LayerPreview
               key={layerId}
