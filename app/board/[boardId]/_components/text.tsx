@@ -1,17 +1,17 @@
-import { Kalam } from "next/font/google";
+import { Inter } from "next/font/google";
 import ContentEditable, { ContentEditableEvent } from "react-contenteditable";
 import { TextLayer } from "@/types/canvas";
 import { cn, colorToCss } from "@/lib/utils";
 import { useMutation } from "@liveblocks/react";
 
-const font = Kalam({
+const font = Inter({
   subsets: ["latin"],
-  weight: ["400"],
+  weight: ["400", "500", "600"],
 });
 
 const calculateFontSize = (width: number, height: number) => {
-  const maxFontSize = 96;
-  const scaleFactor = 0.5;
+  const maxFontSize = 128;
+  const scaleFactor = 0.6;
   const fontSizeBasedOnHeight = height * scaleFactor;
   const fontSizeBasedOnWidth = width * scaleFactor;
 
@@ -50,19 +50,26 @@ export const Text = ({
       height={height}
       onPointerDown={(e) => onPointerDown(e, id)}
       style={{
-        outline: selectionColor ? `1px solid ${selectionColor}` : "none",
+        outline: selectionColor ? `2px solid ${selectionColor}` : "none",
       }}
     >
       <ContentEditable
         html={value || "Text"}
         onChange={handleContentChange}
         className={cn(
-          "h-full w-full flex items-center justify-center text-center drop-shadow-md outline-none",
+          "h-full w-full flex items-center justify-center text-center outline-none",
+          "transition-all duration-200",
+          "hover:opacity-95",
+          "tracking-tight",
           font.className
         )}
         style={{
           color: fill ? colorToCss(fill) : "#000",
           fontSize: calculateFontSize(width, height),
+          textShadow: "0 1px 2px rgba(0,0,0,0.1)",
+          fontWeight: 500,
+          wordBreak: "break-word",
+          lineHeight: "1.2",
         }}
       />
     </foreignObject>

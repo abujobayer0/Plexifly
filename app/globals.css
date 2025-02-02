@@ -74,3 +74,82 @@ body {
     @apply bg-background text-foreground;
   }
 }
+@keyframes drawArrow {
+  0% {
+    stroke-dasharray: 0 100;
+    opacity: 0.5;
+  }
+  50% {
+    stroke-dasharray: 100 0;
+    opacity: 1;
+  }
+  100% {
+    stroke-dasharray: 0 100;
+    opacity: 0.5;
+  }
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: 100;
+  }
+}@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes float-slow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+@keyframes float-fast {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient 8s ease infinite;
+}
+
+.animate-gradient-reverse {
+  background-size: 200% 200%;
+  animation: gradient 8s ease infinite reverse;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: float-slow 8s ease-in-out infinite;
+}
+
+.animate-float-fast {
+  animation: float-fast 4s ease-in-out infinite;
+}

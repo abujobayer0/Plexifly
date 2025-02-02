@@ -82,7 +82,7 @@ export const SelectionTools = memo(
 
     return (
       <div
-        className="absolute p-2 rounded-lg bg-white shadow-sm border border-neutral-100 flex select-none gap-2"
+        className="absolute p-3 rounded-xl bg-white shadow-md border border-neutral-200 flex select-none gap-3"
         style={{
           transform: `translate(
             calc(${x * camera.zoom + camera.x}px - 50%),
@@ -92,36 +92,37 @@ export const SelectionTools = memo(
       >
         <ColorPicker onChange={setFill} />
 
-        <div className="flex flex-col gap-1">
+        <div className="flex gap-1.5">
           <Hint lablel="Bring to front">
             <Button
               variant="board"
               onClick={bringToFront}
               size="icon"
-              className="h-7 w-7 text-neutral-600 hover:text-neutral-800"
+              className="h-8 w-8 text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100 transition"
             >
               <BringToFront className="h-4 w-4" />
             </Button>
           </Hint>
 
-          <Hint lablel="Bring to back">
+          <Hint lablel="Send to back">
             <Button
               variant="board"
               onClick={moveToBack}
               size="icon"
-              className="h-7 w-7 text-neutral-600 hover:text-neutral-800"
+              className="h-8 w-8 text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100 transition"
             >
               <SendToBack className="h-4 w-4" />
             </Button>
           </Hint>
         </div>
-        <div className="flex items-center pl-2 border-l border-neutral-100">
+
+        <div className="flex items-center pl-3 border-l border-neutral-200">
           <Hint lablel="Delete">
             <Button
               variant="board"
               size="icon"
               onClick={deleteLayers}
-              className="h-7 w-7 text-neutral-600 hover:text-neutral-800 hover:bg-red-50"
+              className="h-8 w-8 text-neutral-600 hover:text-neutral-800 hover:bg-red-50 transition"
             >
               <Trash2 className="h-4 w-4" />
             </Button>

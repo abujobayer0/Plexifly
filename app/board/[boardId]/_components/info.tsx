@@ -31,14 +31,14 @@ export default function Info({ boardId }: InfoProps) {
   if (!data) return <InfoSkeleton />;
 
   return (
-    <div className="absolute top-2 left-2 bg-white rounded-md px-1.5 h-12 flex items-center shadow-md">
+    <div className="absolute top-2 left-2 backdrop-blur-[12px] bg-white/70 rounded-xl px-1.5 h-12 flex items-center shadow-lg border border-white/20">
       <Hint lablel="Go to boards" side="bottom" sideOffset={10}>
-        <Button variant={"board"} asChild className="px-2">
+        <Button variant={"board"} asChild className="px-2 hover:bg-neutral-100">
           <Link href={"/"}>
             <Image src={"/logo.svg"} alt="logo" height={30} width={30} />
             <span
               className={cn(
-                "font-semibold text-xl ml-2 text-black",
+                "font-semibold text-xl ml-2 hover:text-primary",
                 font.className
               )}
             >
@@ -50,7 +50,7 @@ export default function Info({ boardId }: InfoProps) {
       <TabSeparator />
       <Hint lablel="Edit title" side="bottom" sideOffset={10}>
         <Button
-          className="text-base font-normal px-2"
+          className="text-base hover:bg-neutral-100 hover:text-primary font-normal px-2"
           variant={"board"}
           onClick={() => onOpen(data?._id, data?.title)}
         >
@@ -61,7 +61,10 @@ export default function Info({ boardId }: InfoProps) {
       <Actions id={data._id} title={data.title} side="bottom" sideOffset={10}>
         <div>
           <Hint lablel="Main menu" side="bottom" sideOffset={10}>
-            <Button variant={"board"}>
+            <Button
+              variant={"board"}
+              className="hover:bg-neutral-100 hover:text-primary"
+            >
               <Menu />
             </Button>
           </Hint>

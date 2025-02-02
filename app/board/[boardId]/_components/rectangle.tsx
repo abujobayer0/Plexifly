@@ -20,7 +20,7 @@ export const Rectangle = ({
 
   return (
     <rect
-      className="drop-shadow-md"
+      className="drop-shadow-md rounded-xl"
       onPointerDown={(e) => onPointerDown(e, id)}
       style={{
         transform: `translate(${x}px, ${y}px)`,
@@ -32,6 +32,9 @@ export const Rectangle = ({
       strokeWidth={1}
       stroke={selectionColor || "transparent"}
       fill={fill ? colorToCss(fill) : "#ccc"}
+      rx={4}
+      ry={4}
+      shapeRendering="geometricPrecision"
     />
   );
 };

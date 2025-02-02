@@ -19,7 +19,7 @@ export const Ellipse = ({
 
   return (
     <ellipse
-      className="drop-shadow-md"
+      className="hover:opacity-90"
       onPointerDown={(e) => onPointerDown(e, id)}
       style={{
         transform: `translate(${x}px, ${y}px)`,
@@ -28,9 +28,11 @@ export const Ellipse = ({
       cy={height / 2}
       rx={width / 2}
       ry={height / 2}
-      strokeWidth={1}
-      stroke={selectionColor || "transparent"}
-      fill={fill ? colorToCss(fill) : "#ccc"}
+      strokeWidth={3}
+      stroke={selectionColor || colorToCss(fill) || "#000"}
+      fill="transparent"
+      strokeLinecap="round"
+      strokeDasharray="0"
     />
   );
 };

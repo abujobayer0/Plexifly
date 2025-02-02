@@ -32,8 +32,8 @@ export default function Toolbar({
   redo,
 }: ToolbarProps) {
   return (
-    <div className="absolute top-[50%] -translate-y-[50%] left-2 flex flex-col gap-y-4">
-      <div className="bg-white rounded-md p-1.5 flex gap-y-1 flex-col items-center shadow-md">
+    <div className="absolute top-[50%] -translate-y-[50%] left-4 flex flex-col gap-y-6">
+      <div className="backdrop-blur-[12px] bg-white/70 rounded-xl p-2.5 flex gap-y-2 flex-col items-center shadow-lg border border-white/20">
         <ToolButton
           label="Select"
           icon={MousePointer2}
@@ -113,7 +113,7 @@ export default function Toolbar({
           }
         />
       </div>
-      <div className="bg-white rounded-md p-1.5 flex flex-col items-center shadow-md ">
+      <div className="backdrop-blur-[12px] bg-white/70 rounded-xl p-2.5 flex flex-col items-center shadow-lg border border-white/20">
         <ToolButton
           label="Undo"
           icon={Undo2}
@@ -133,6 +133,6 @@ export default function Toolbar({
 
 export function ToolbarSkeleton() {
   return (
-    <div className="absolute top-[50%] bg-white shadow-md rounded-md -translate-y-[50%] left-2 flex flex-col gap-y-4 h-[360px] w-[52px]"></div>
+    <div className="absolute top-[50%] backdrop-blur-[12px] bg-white/70 shadow-lg rounded-xl border border-white/20 -translate-y-[50%] left-4 flex flex-col gap-y-6 h-[380px] w-[56px]" />
   );
 }

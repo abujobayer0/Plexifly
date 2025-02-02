@@ -22,22 +22,27 @@ export default function Path({
 }: PathProps) {
   return (
     <path
-      className="drop-shadow-md "
+      className="drop-shadow-lg hover:opacity-90 transition-opacity"
       onPointerDown={onPointerDown}
       d={getSvgPathFromStroke(
         getStroke(points, {
-          size: 16,
-          thinning: 0.5,
-          smoothing: 0.5,
-          streamline: 0.5,
+          size: 12,
+          thinning: 0.4,
+          smoothing: 0.7,
+          streamline: 0.6,
+          easing: (t) => t * t,
+          simulatePressure: true,
         })
       )}
-      style={{ transform: `translate(${x}px,${y}px` }}
+      style={{
+        transform: `translate(${x}px,${y}px)`,
+        mixBlendMode: "multiply",
+      }}
       x={0}
       y={0}
       fill={fill}
       stroke={stroke}
-      strokeWidth={1}
+      strokeWidth={1.5}
     />
   );
 }

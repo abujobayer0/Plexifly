@@ -27,12 +27,21 @@ export const SelectionBox = memo(
       return null;
     }
 
+    const handleStyles = {
+      width: `${HANDLE_WIDTH}px`,
+      height: `${HANDLE_WIDTH}px`,
+      borderRadius: "2px",
+      transition: "background-color 0.2s",
+    };
+
     return (
       <>
         <rect
-          className="fill-transparent stroke-blue-500 stroke-1 pointer-events-none"
+          className="fill-transparent stroke-indigo-500 stroke-[1.5] pointer-events-none"
           style={{
             transform: `translate(${bounds.x}px, ${bounds.y}px)`,
+            strokeDasharray: "4 4",
+            opacity: 0.8,
           }}
           x={0}
           y={0}
@@ -42,13 +51,12 @@ export const SelectionBox = memo(
         {isShowingHandles && (
           <>
             <rect
-              className="fill-white stroke-1 stroke-blue-500"
+              className="fill-white stroke-1 stroke-indigo-500 shadow-sm"
               x={0}
               y={0}
               style={{
+                ...handleStyles,
                 cursor: "nw-resize",
-                width: `${HANDLE_WIDTH}px`,
-                height: `${HANDLE_WIDTH}px`,
                 transform: `translate(
                 ${bounds.x - HANDLE_WIDTH / 2}px, 
                 ${bounds.y - HANDLE_WIDTH / 2}px)`,
@@ -57,15 +65,20 @@ export const SelectionBox = memo(
                 e.stopPropagation();
                 onResizeHandlePointerDown(Side.Top + Side.Left, bounds);
               }}
+              onPointerOver={(e) => {
+                e.currentTarget.classList.add("fill-indigo-100");
+              }}
+              onPointerOut={(e) => {
+                e.currentTarget.classList.remove("fill-indigo-100");
+              }}
             />
             <rect
-              className="fill-white stroke-1 stroke-blue-500"
+              className="fill-white stroke-1 stroke-indigo-500 shadow-sm"
               x={0}
               y={0}
               style={{
+                ...handleStyles,
                 cursor: "ns-resize",
-                width: `${HANDLE_WIDTH}px`,
-                height: `${HANDLE_WIDTH}px`,
                 transform: `translate(
                 ${bounds.x + bounds.width / 2 - HANDLE_WIDTH / 2}px, 
                 ${bounds.y - HANDLE_WIDTH / 2}px)`,
@@ -74,15 +87,20 @@ export const SelectionBox = memo(
                 e.stopPropagation();
                 onResizeHandlePointerDown(Side.Top, bounds);
               }}
+              onPointerOver={(e) => {
+                e.currentTarget.classList.add("fill-indigo-100");
+              }}
+              onPointerOut={(e) => {
+                e.currentTarget.classList.remove("fill-indigo-100");
+              }}
             />
             <rect
-              className="fill-white stroke-1 stroke-blue-500"
+              className="fill-white stroke-1 stroke-indigo-500 shadow-sm"
               x={0}
               y={0}
               style={{
+                ...handleStyles,
                 cursor: "nesw-resize",
-                width: `${HANDLE_WIDTH}px`,
-                height: `${HANDLE_WIDTH}px`,
                 transform: `translate(
                 ${bounds.x - HANDLE_WIDTH / 2 + bounds.width}px, 
                 ${bounds.y - HANDLE_WIDTH / 2}px)`,
@@ -91,15 +109,20 @@ export const SelectionBox = memo(
                 e.stopPropagation();
                 onResizeHandlePointerDown(Side.Top + Side.Right, bounds);
               }}
+              onPointerOver={(e) => {
+                e.currentTarget.classList.add("fill-indigo-100");
+              }}
+              onPointerOut={(e) => {
+                e.currentTarget.classList.remove("fill-indigo-100");
+              }}
             />
             <rect
-              className="fill-white stroke-1 stroke-blue-500"
+              className="fill-white stroke-1 stroke-indigo-500 shadow-sm"
               x={0}
               y={0}
               style={{
+                ...handleStyles,
                 cursor: "ew-resize",
-                width: `${HANDLE_WIDTH}px`,
-                height: `${HANDLE_WIDTH}px`,
                 transform: `translate(
                 ${bounds.x - HANDLE_WIDTH / 2 + bounds.width}px, 
                 ${bounds.y + bounds.height / 2 - HANDLE_WIDTH / 2}px)`,
@@ -108,15 +131,20 @@ export const SelectionBox = memo(
                 e.stopPropagation();
                 onResizeHandlePointerDown(Side.Right, bounds);
               }}
+              onPointerOver={(e) => {
+                e.currentTarget.classList.add("fill-indigo-100");
+              }}
+              onPointerOut={(e) => {
+                e.currentTarget.classList.remove("fill-indigo-100");
+              }}
             />
             <rect
-              className="fill-white stroke-1 stroke-blue-500"
+              className="fill-white stroke-1 stroke-indigo-500 shadow-sm"
               x={0}
               y={0}
               style={{
+                ...handleStyles,
                 cursor: "nwse-resize",
-                width: `${HANDLE_WIDTH}px`,
-                height: `${HANDLE_WIDTH}px`,
                 transform: `translate(
                 ${bounds.x - HANDLE_WIDTH / 2 + bounds.width}px, 
                 ${bounds.y - HANDLE_WIDTH / 2 + bounds.height}px)`,
@@ -125,56 +153,77 @@ export const SelectionBox = memo(
                 e.stopPropagation();
                 onResizeHandlePointerDown(Side.Bottom + Side.Right, bounds);
               }}
+              onPointerOver={(e) => {
+                e.currentTarget.classList.add("fill-indigo-100");
+              }}
+              onPointerOut={(e) => {
+                e.currentTarget.classList.remove("fill-indigo-100");
+              }}
             />
             <rect
-              className="fill-white stroke-1 stroke-blue-500"
+              className="fill-white stroke-1 stroke-indigo-500 shadow-sm"
               x={0}
               y={0}
               style={{
+                ...handleStyles,
                 cursor: "ns-resize",
-                width: `${HANDLE_WIDTH}px`,
-                height: `${HANDLE_WIDTH}px`,
                 transform: `translate(
-              ${bounds.x + bounds.width / 2 - HANDLE_WIDTH / 2}px, 
-              ${bounds.y - HANDLE_WIDTH / 2 + bounds.height}px)`,
+                ${bounds.x + bounds.width / 2 - HANDLE_WIDTH / 2}px, 
+                ${bounds.y - HANDLE_WIDTH / 2 + bounds.height}px)`,
               }}
               onPointerDown={(e) => {
                 e.stopPropagation();
                 onResizeHandlePointerDown(Side.Bottom, bounds);
               }}
+              onPointerOver={(e) => {
+                e.currentTarget.classList.add("fill-indigo-100");
+              }}
+              onPointerOut={(e) => {
+                e.currentTarget.classList.remove("fill-indigo-100");
+              }}
             />
             <rect
-              className="fill-white stroke-1 stroke-blue-500"
+              className="fill-white stroke-1 stroke-indigo-500 shadow-sm"
               x={0}
               y={0}
               style={{
+                ...handleStyles,
                 cursor: "nesw-resize",
-                width: `${HANDLE_WIDTH}px`,
-                height: `${HANDLE_WIDTH}px`,
                 transform: `translate(
-            ${bounds.x - HANDLE_WIDTH / 2}px, 
-            ${bounds.y - HANDLE_WIDTH / 2 + bounds.height}px)`,
+                ${bounds.x - HANDLE_WIDTH / 2}px, 
+                ${bounds.y - HANDLE_WIDTH / 2 + bounds.height}px)`,
               }}
               onPointerDown={(e) => {
                 e.stopPropagation();
                 onResizeHandlePointerDown(Side.Bottom + Side.Left, bounds);
               }}
+              onPointerOver={(e) => {
+                e.currentTarget.classList.add("fill-indigo-100");
+              }}
+              onPointerOut={(e) => {
+                e.currentTarget.classList.remove("fill-indigo-100");
+              }}
             />
             <rect
-              className="fill-white stroke-1 stroke-blue-500"
+              className="fill-white stroke-1 stroke-indigo-500 shadow-sm"
               x={0}
               y={0}
               style={{
+                ...handleStyles,
                 cursor: "ew-resize",
-                width: `${HANDLE_WIDTH}px`,
-                height: `${HANDLE_WIDTH}px`,
                 transform: `translate(
-          ${bounds.x - HANDLE_WIDTH / 2}px, 
-          ${bounds.y - HANDLE_WIDTH / 2 + bounds.height / 2}px)`,
+                ${bounds.x - HANDLE_WIDTH / 2}px, 
+                ${bounds.y - HANDLE_WIDTH / 2 + bounds.height / 2}px)`,
               }}
               onPointerDown={(e) => {
                 e.stopPropagation();
                 onResizeHandlePointerDown(Side.Left, bounds);
+              }}
+              onPointerOver={(e) => {
+                e.currentTarget.classList.add("fill-indigo-100");
+              }}
+              onPointerOut={(e) => {
+                e.currentTarget.classList.remove("fill-indigo-100");
               }}
             />
           </>

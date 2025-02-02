@@ -11,7 +11,7 @@ export default function Participants() {
   const currentUser = useSelf();
   const hasMoreUsers = users.length > MAX_SHOWN_OTHER_USERS;
   return (
-    <div className="absolute h-12 top-2 right-2 bg-white rounded-md p-3 flex items-center shadow-md">
+    <div className="absolute h-12 top-2 right-2 bg-white/70 border border-white/20 backdrop-blur-[12px] rounded-xl p-3 flex items-center shadow-xl">
       <div className="flex gap-x-2">
         {users
           ?.slice(0, MAX_SHOWN_OTHER_USERS)
