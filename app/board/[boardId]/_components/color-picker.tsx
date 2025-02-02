@@ -1,23 +1,109 @@
 "use client";
 import { colorToCss } from "@/lib/utils";
 import { Color } from "@/types/canvas";
-import React from "react";
+import React, { useState } from "react";
+import { HexColorPicker } from "react-colorful";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 interface ColorPickerProps {
   onChange: (color: Color) => void;
 }
 
 export const ColorPicker = ({ onChange }: ColorPickerProps) => {
+  const [selectedColor, setSelectedColor] = useState<Color>({
+    r: 0,
+    g: 0,
+    b: 0,
+  });
+  const [colorHistory, setColorHistory] = useState<Color[]>([]);
+
+  const presetColors = [
+    { r: 0, g: 0, b: 0 }, // Black
+    { r: 87, g: 87, b: 87 }, // Dark Gray
+    { r: 243, g: 83, b: 255 }, // Pink
+  ];
+
+  const handleColorChange = (color: Color) => {
+    onChange(color);
+    setSelectedColor(color);
+
+    if (
+      !colorHistory.some(
+        (c) => c.r === color.r && c.g === color.g && c.b === color.b
+      )
+    ) {
+      setColorHistory((prev) => [color, ...prev].slice(0, 5));
+    }
+  };
+
   return (
-    <div className="flex flex-wrap gap-2 items-center max-w-[164px] pr-2 mr-2 border-r border-neutral-200">
-      <ColorButton onClick={onChange} color={{ r: 243, g: 83, b: 255 }} />
-      <ColorButton onClick={onChange} color={{ r: 150, g: 200, b: 255 }} />
-      <ColorButton onClick={onChange} color={{ r: 100, g: 50, b: 200 }} />
-      <ColorButton onClick={onChange} color={{ r: 34, g: 193, b: 195 }} />
-      <ColorButton onClick={onChange} color={{ r: 255, g: 99, b: 71 }} />
-      <ColorButton onClick={onChange} color={{ r: 255, g: 223, b: 186 }} />
-      <ColorButton onClick={onChange} color={{ r: 255, g: 69, b: 0 }} />
-      <ColorButton onClick={onChange} color={{ r: 255, g: 105, b: 180 }} />
+    <div className="flex flex-col gap-3 p-4 ">
+      <div className="flex flex-wrap gap-2 items-center">
+        {presetColors.map((color, index) => (
+          <ColorButton
+            key={index}
+            color={color}
+            onClick={handleColorChange}
+            isSelected={
+              color.r === selectedColor.r &&
+              color.g === selectedColor.g &&
+              color.b === selectedColor.b
+            }
+          />
+        ))}
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="w-8 h-8 flex items-center justify-center rounded-lg border-2 border-dashed border-neutral-300 hover:border-neutral-400 hover:bg-neutral-50 transition">
+              <span className="text-neutral-500 text-xl">+</span>
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 p-3 rounded-xl border border-neutral-200 shadow-xl">
+            <div className="space-y-3">
+              <HexColorPicker
+                color={`rgb(${selectedColor.r},${selectedColor.g},${selectedColor.b})`}
+                onChange={(color) => {
+                  const result =
+                    /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(color);
+                  if (result) {
+                    const newColor = {
+                      r: parseInt(result[1], 16),
+                      g: parseInt(result[2], 16),
+                      b: parseInt(result[3], 16),
+                    };
+                    handleColorChange(newColor);
+                  }
+                }}
+              />
+              {colorHistory.length > 0 && (
+                <div className="pt-3 border-t border-neutral-200">
+                  <p className="text-xs text-neutral-500 mb-2">Recent Colors</p>
+                  <div className="flex gap-2">
+                    {colorHistory.map((color, index) => (
+                      <ColorButton
+                        key={`history-${index}`}
+                        color={color}
+                        onClick={handleColorChange}
+                        isSelected={
+                          color.r === selectedColor.r &&
+                          color.g === selectedColor.g &&
+                          color.b === selectedColor.b
+                        }
+                        size="sm"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
     </div>
   );
 };
@@ -25,18 +111,32 @@ export const ColorPicker = ({ onChange }: ColorPickerProps) => {
 interface ColorButtonProps {
   onClick: (color: Color) => void;
   color: Color;
+  isSelected?: boolean;
+  size?: "sm" | "default";
 }
 
-const ColorButton = ({ onClick, color }: ColorButtonProps) => {
+const ColorButton = ({
+  onClick,
+  color,
+  isSelected,
+  size = "default",
+}: ColorButtonProps) => {
+  const sizeClasses = size === "sm" ? "w-6 h-6" : "w-8 h-8";
+
   return (
     <button
-      className="w-8 h-8 items-center flex justify-center hover:opacity-75 transition"
+      className={`relative ${sizeClasses} items-center flex justify-center hover:opacity-75 transition`}
       onClick={() => onClick(color)}
     >
       <div
-        className="w-8 h-8 rounded-md border border-neutral-300"
-        style={{ background: colorToCss(color) }}
-      ></div>
+        className={cn(
+          `${sizeClasses} rounded-lg border border-neutral-200`,
+          isSelected && "ring-2 ring-offset-2 ring-black"
+        )}
+        style={{
+          background: colorToCss(color),
+        }}
+      />
     </button>
   );
 };

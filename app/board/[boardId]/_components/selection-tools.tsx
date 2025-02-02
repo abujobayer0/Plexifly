@@ -77,38 +77,53 @@ export const SelectionTools = memo(
       return null;
     }
 
-    const x = selectionBounds.width / 2 + selectionBounds.x + camera.x;
-    const y = selectionBounds.y + camera.y;
+    const x = selectionBounds.width / 2 + selectionBounds.x;
+    const y = selectionBounds.y - 100;
 
     return (
       <div
-        className="absolute p-3 rounded-xl bg-white shadow-sm border flex select-none"
+        className="absolute p-2 rounded-lg bg-white shadow-sm border border-neutral-100 flex select-none gap-2"
         style={{
           transform: `translate(
-            calc(${x}px - 50%),
-            calc(${y}px - 120%)
-            )`,
+            calc(${x * camera.zoom + camera.x}px - 50%),
+            calc(${y * camera.zoom + camera.y}px)
+          )`,
         }}
       >
         <ColorPicker onChange={setFill} />
 
-        <div className="flex flex-col gap-y-0.5">
+        <div className="flex flex-col gap-1">
           <Hint lablel="Bring to front">
-            <Button variant={"board"} onClick={bringToFront} size={"icon"}>
-              <BringToFront />
+            <Button
+              variant="board"
+              onClick={bringToFront}
+              size="icon"
+              className="h-7 w-7 text-neutral-600 hover:text-neutral-800"
+            >
+              <BringToFront className="h-4 w-4" />
             </Button>
           </Hint>
 
           <Hint lablel="Bring to back">
-            <Button variant={"board"} onClick={moveToBack} size={"icon"}>
-              <SendToBack />
+            <Button
+              variant="board"
+              onClick={moveToBack}
+              size="icon"
+              className="h-7 w-7 text-neutral-600 hover:text-neutral-800"
+            >
+              <SendToBack className="h-4 w-4" />
             </Button>
           </Hint>
         </div>
-        <div className="flex items-center pl-2 ml-2 border-l border-neutral-200 ">
+        <div className="flex items-center pl-2 border-l border-neutral-100">
           <Hint lablel="Delete">
-            <Button variant="board" size="icon" onClick={deleteLayers}>
-              <Trash2 />
+            <Button
+              variant="board"
+              size="icon"
+              onClick={deleteLayers}
+              className="h-7 w-7 text-neutral-600 hover:text-neutral-800 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4" />
             </Button>
           </Hint>
         </div>
