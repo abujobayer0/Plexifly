@@ -52,16 +52,7 @@ export const ColorPicker = ({ onChange }: ColorPickerProps) => {
     <div className="flex flex-col gap-3 p-4 ">
       <div className="flex flex-wrap gap-2 items-center">
         {presetColors.map((color, index) => (
-          <ColorButton
-            key={index}
-            color={color}
-            onClick={handleColorChange}
-            isSelected={
-              color.r === selectedColor.r &&
-              color.g === selectedColor.g &&
-              color.b === selectedColor.b
-            }
-          />
+          <ColorButton key={index} color={color} onClick={handleColorChange} />
         ))}
 
         <Popover>
@@ -125,7 +116,6 @@ interface ColorButtonProps {
 const ColorButton = ({
   onClick,
   color,
-  isSelected,
   size = "default",
 }: ColorButtonProps) => {
   const sizeClasses = size === "sm" ? "w-6 h-6" : "w-8 h-8";
