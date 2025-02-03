@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,16 +20,19 @@ import {
   Clock,
   Twitter,
   Linkedin,
+  PenTool,
 } from "lucide-react";
 import PreviewWhiteboardHome from "@/components/home/preview-whiteboard-home";
+import { useAuth } from "@clerk/nextjs";
 
 export default function HomePage() {
+  const { isSignedIn } = useAuth();
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-white to-purple-50">
       {/* Navigation - Modern Update */}
       <nav className="fixed top-0 w-full border-b border-purple-100/20 bg-white/80 backdrop-blur-md z-50">
         <div className="container mx-auto px-6">
-          <div className="flex items-center justify-between h-16 sm:h-20">
+          <div className="flex items-center justify-between h-16">
             {/* Logo Section */}
             <Link href="/" className="flex items-center gap-x-2.5 group">
               <div className="relative">
@@ -48,7 +53,7 @@ export default function HomePage() {
               {["Features", "Solutions", "Pricing", "Resources"].map((item) => (
                 <Link
                   key={item}
-                  href={`/${item.toLowerCase()}`}
+                  href="/dashboard"
                   className="relative px-4 py-2 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors duration-200 group"
                 >
                   {item}
@@ -59,25 +64,31 @@ export default function HomePage() {
 
             {/* Right Section */}
             <div className="flex items-center gap-x-3">
-              <Link href="/sign-in">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="font-medium relative group"
-                >
-                  Log in
-                  <span className="absolute inset-x-2 -bottom-px h-px bg-gradient-to-r from-purple-500/0 via-purple-500/70 to-purple-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </Button>
-              </Link>
-              <Link href="/sign-up">
+              {!isSignedIn && (
+                <Link href="/dashboard">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="font-medium relative group"
+                  >
+                    Log in
+                    <span className="absolute inset-x-2 -bottom-px h-px bg-gradient-to-r from-purple-500/0 via-purple-500/70 to-purple-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </Button>
+                </Link>
+              )}
+              <Link href="/dashboard">
                 <Button
                   size="sm"
                   className="relative group bg-[#8c52ff] hover:bg-[#7c4dff] font-medium px-6"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-md" />
                   <span className="relative flex items-center gap-x-1">
-                    Get Plexifly free
-                    <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform duration-300" />
+                    {isSignedIn ? "Dashboard" : "Get Plexifly free"}
+                    {isSignedIn ? (
+                      <PenTool className="w-3 h-3 group-hover:translate-x-0.5 transition-transform duration-300" />
+                    ) : (
+                      <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform duration-300" />
+                    )}
                   </span>
                 </Button>
               </Link>
@@ -193,9 +204,6 @@ export default function HomePage() {
             <div className="absolute top-20 right-1/4 text-xs font-mono text-purple-500/30 animate-float">
               &lt;canvas /&gt;
             </div>
-            <div className="absolute bottom-32 left-1/3 text-xs font-mono text-blue-500/30 animate-float-slow">
-              {"{collaborate: true}"}
-            </div>
           </div>
         </div>
 
@@ -249,7 +257,7 @@ export default function HomePage() {
 
             {/* Modern CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/sign-up">
+              <Link href="/dashboard">
                 <Button
                   size="lg"
                   className="relative group overflow-hidden bg-[#8c52ff] hover:bg-[#7c4dff] transition-all duration-300
@@ -265,10 +273,7 @@ export default function HomePage() {
                   </span>
                 </Button>
               </Link>
-              <Link
-                href="https://github.com/yourusername/plexifly"
-                target="_blank"
-              >
+              <Link href="/dashboard">
                 <Button
                   size="lg"
                   variant="outline"
@@ -616,14 +621,10 @@ export default function HomePage() {
                 <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/10 to-blue-500/10 rounded-full blur-3xl animate-float-slow" />
                 <div className="absolute inset-0 bg-gradient-to-bl from-[#8c52ff]/10 to-blue-300/10 rounded-full blur-3xl animate-float-reverse" />
               </div>
-              <div className="absolute -right-20 bottom-1/4 w-96 h-96">
-                <div className="absolute inset-0 bg-gradient-to-bl from-purple-400/10 to-pink-500/10 rounded-full blur-3xl animate-float" />
-                <div className="absolute inset-0 bg-gradient-to-tr from-[#7c4dff]/10 to-purple-300/10 rounded-full blur-3xl animate-float-slow" />
-              </div>
 
               {/* Floating Shapes */}
               <div className="absolute top-20 right-1/4 w-16 h-16 border-2 border-purple-500/20 rounded-full animate-spin-slow" />
-              <div className="absolute bottom-20 left-1/3 w-20 h-20 border-2 border-blue-500/20 rounded animate-float" />
+              <div className="absolute bottom-20 left-1/4 w-20 h-20 border-2 border-blue-500/20 rounded animate-float" />
 
               {/* Mouse Cursor Trail */}
               <div className="absolute top-1/4 right-1/3">
@@ -714,7 +715,7 @@ export default function HomePage() {
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link href="/sign-up">
+                <Link href="/dashboard">
                   <Button
                     size="lg"
                     className="relative group overflow-hidden bg-[#8c52ff] hover:bg-[#7c4dff] px-8 py-6 text-base font-medium
@@ -730,7 +731,7 @@ export default function HomePage() {
                     </span>
                   </Button>
                 </Link>
-                <Link href="/contact-sales">
+                <Link href="/dashboard">
                   <Button
                     size="lg"
                     variant="outline"
@@ -768,7 +769,7 @@ export default function HomePage() {
                 {[Twitter, Github, Linkedin].map((Icon, index) => (
                   <Link
                     key={index}
-                    href="#"
+                    href="/dashboard"
                     className="text-gray-400 hover:text-purple-600 transition-colors p-2 hover:bg-purple-50 rounded-full"
                   >
                     <Icon className="h-5 w-5" />
@@ -800,7 +801,7 @@ export default function HomePage() {
                   {section.links.map((link, linkIndex) => (
                     <li key={linkIndex}>
                       <Link
-                        href="#"
+                        href="/dashboard"
                         className="text-gray-500 hover:text-purple-600 transition-colors text-sm"
                       >
                         {link}
@@ -822,7 +823,7 @@ export default function HomePage() {
                 {["Privacy", "Terms", "Cookies"].map((item) => (
                   <Link
                     key={item}
-                    href={`/${item.toLowerCase()}`}
+                    href="/dashboard"
                     className="hover:text-purple-600 transition-colors"
                   >
                     {item}
