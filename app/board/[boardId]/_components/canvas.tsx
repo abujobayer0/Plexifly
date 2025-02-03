@@ -265,6 +265,7 @@ export default function Canvas({ boardId }: CanvasProps) {
   );
 
   const onWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
       const delta = e.deltaY;
