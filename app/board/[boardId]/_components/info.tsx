@@ -34,7 +34,7 @@ export default function Info({ boardId }: InfoProps) {
     <div className="absolute top-2 left-2 backdrop-blur-[12px] bg-white/70 rounded-xl px-1.5 h-12 flex items-center shadow-lg border border-white/20">
       <Hint lablel="Go to boards" side="bottom" sideOffset={10}>
         <Button variant={"board"} asChild className="px-2 hover:bg-neutral-100">
-          <Link href={"/"}>
+          <Link href={"/dashboard"}>
             <Image src={"/logo.svg"} alt="logo" height={30} width={30} />
             <span
               className={cn(

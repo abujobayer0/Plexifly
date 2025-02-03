@@ -52,7 +52,6 @@ export const Note = ({
       style={{
         outline: selectionColor ? `2px solid ${selectionColor}` : "none",
         backgroundColor: "transparent",
-        transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
       }}
       className="group"
     >

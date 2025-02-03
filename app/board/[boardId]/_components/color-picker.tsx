@@ -23,9 +23,16 @@ export const ColorPicker = ({ onChange }: ColorPickerProps) => {
   const [colorHistory, setColorHistory] = useState<Color[]>([]);
 
   const presetColors = [
-    { r: 0, g: 0, b: 0 }, // Black
-    { r: 87, g: 87, b: 87 }, // Dark Gray
-    { r: 243, g: 83, b: 255 }, // Pink
+    { r: 0, g: 0, b: 0 },
+    { r: 87, g: 87, b: 87 },
+    { r: 243, g: 83, b: 255 },
+    { r: 255, g: 0, b: 0 },
+    { r: 0, g: 0, b: 255 },
+    { r: 255, g: 235, b: 59 },
+    { r: 255, g: 152, b: 0 },
+    { r: 156, g: 39, b: 176 },
+    { r: 0, g: 188, b: 212 },
+    { r: 76, g: 175, b: 80 },
   ];
 
   const handleColorChange = (color: Color) => {
@@ -129,10 +136,7 @@ const ColorButton = ({
       onClick={() => onClick(color)}
     >
       <div
-        className={cn(
-          `${sizeClasses} rounded-lg border border-neutral-200`,
-          isSelected && "ring-2 ring-offset-2 ring-black"
-        )}
+        className={cn(`${sizeClasses} rounded-lg border border-neutral-200`)}
         style={{
           background: colorToCss(color),
         }}

@@ -24,11 +24,22 @@ import {
 } from "lucide-react";
 import PreviewWhiteboardHome from "@/components/home/preview-whiteboard-home";
 import { useAuth } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
 
 export default function HomePage() {
   const { isSignedIn } = useAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.style.scrollBehavior = "smooth";
+
+    return () => {
+      document.documentElement.style.scrollBehavior = "";
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-white to-purple-50">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-white to-purple-50 scroll-smooth">
       {/* Navigation - Modern Update */}
       <nav className="fixed top-0 w-full border-b border-purple-100/20 bg-white/80 backdrop-blur-md z-50">
         <div className="container mx-auto px-6">
@@ -93,8 +104,11 @@ export default function HomePage() {
                 </Button>
               </Link>
 
-              {/* Mobile Menu Button - Optional */}
-              <button className="ml-2 p-1.5 rounded-lg text-gray-500 hover:text-purple-600 hover:bg-purple-50 transition-colors duration-200 md:hidden">
+              {/* Mobile Menu Button - Updated */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="ml-2 p-1.5 rounded-lg text-gray-500 hover:text-purple-600 hover:bg-purple-50 transition-colors duration-200 md:hidden"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-6 w-6"
@@ -106,10 +120,45 @@ export default function HomePage() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
+                    d={
+                      isMobileMenuOpen
+                        ? "M6 18L18 6M6 6l12 12"
+                        : "M4 6h16M4 12h16M4 18h16"
+                    }
                   />
                 </svg>
               </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Navigation Menu */}
+        <div
+          className={`md:hidden absolute top-full left-0 right-0 bg-white border-b border-purple-100/20 transition-all duration-300 ${
+            isMobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"
+          }`}
+        >
+          <div className="container mx-auto px-6 py-4">
+            <div className="flex flex-col space-y-2">
+              {["Features", "Solutions", "Pricing", "Resources"].map((item) => (
+                <Link
+                  key={item}
+                  href="/dashboard"
+                  className="px-4 py-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors duration-200"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {item}
+                </Link>
+              ))}
+              {!isSignedIn && (
+                <Link
+                  href="/dashboard"
+                  className="px-4 py-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors duration-200"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Log in
+                </Link>
+              )}
             </div>
           </div>
         </div>
