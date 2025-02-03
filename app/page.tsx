@@ -21,27 +21,6 @@ import {
 } from "lucide-react";
 import PreviewWhiteboardHome from "@/components/home/preview-whiteboard-home";
 
-const features = [
-  {
-    title: "Advanced Drawing Tools",
-    description:
-      "Complete toolkit with Text, Shapes, Sticky Notes & Pencil tools for all your creative needs.",
-    icon: Pencil,
-  },
-  {
-    title: "Smart Layering",
-    description:
-      "Organize your work with professional layering system. Move elements front to back with ease.",
-    icon: Layers,
-  },
-  {
-    title: "Real-time Collaboration",
-    description:
-      "Work together seamlessly with your team. See changes instantly as they happen.",
-    icon: Users,
-  },
-];
-
 export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-white to-purple-50">
@@ -353,8 +332,8 @@ export default function HomePage() {
                   </span>
                 </h2>
                 <p className="text-xl text-gray-500 leading-relaxed">
-                  Powerful tools and features designed to enhance your team's
-                  creativity and productivity.
+                  Powerful tools and features designed to enhance your
+                  team&apos;s creativity and productivity.
                 </p>
               </div>
 
@@ -725,7 +704,7 @@ export default function HomePage() {
                 </span>
                 <br />
                 <span className="text-gray-900">
-                  your team's collaboration?
+                  your team&apos;s collaboration?
                 </span>
               </h2>
 
