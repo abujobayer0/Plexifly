@@ -14,7 +14,7 @@ const SearchInput = () => {
   const debouncedCallback = useDebounceCallback((searchValue: string) => {
     const url = qs.stringifyUrl(
       {
-        url: "/",
+        url: "/dashboard",
         query: { search: searchValue },
       },
       { skipEmptyString: true, skipNull: true }

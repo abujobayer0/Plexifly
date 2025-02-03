@@ -3,7 +3,7 @@ import React from "react";
 
 export const EmptyFavorites = () => {
   return (
-    <div className="h-full flex flex-col items-center justify-center">
+    <div className="h-full flex flex-col pt-32 items-center justify-center">
       <Image
         src={"/empty-favorites.svg"}
         alt="favorite"

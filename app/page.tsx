@@ -25,6 +25,68 @@ import {
 import PreviewWhiteboardHome from "@/components/home/preview-whiteboard-home";
 import { useAuth } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
+import { GitStarButton } from "@/components/eu/github-start-button";
+import MorphingText from "@/components/eu/morphingtext";
+
+const NAVIGATION_ITEMS = ["Features", "Solutions", "Pricing", "Resources"];
+
+const FEATURE_ITEMS = [
+  { icon: Pencil, text: "Drawing Tools", desc: "Precise tools for every need" },
+  {
+    icon: Shapes,
+    text: "Shape Library",
+    desc: "Ready-to-use shape collection",
+  },
+  {
+    icon: StickyNote,
+    text: "Sticky Notes",
+    desc: "Quick thoughts and reminders",
+  },
+  { icon: Type, text: "Text Editor", desc: "Rich text formatting" },
+  { icon: Layers, text: "Layer Control", desc: "Professional organization" },
+  { icon: Undo2, text: "Version History", desc: "Track all changes" },
+  { icon: Star, text: "Smart Features", desc: "AI-powered assistance" },
+  { icon: Users, text: "Team Sharing", desc: "Seamless collaboration" },
+];
+
+const TRUST_METRICS = [
+  {
+    metric: "10,000+",
+    label: "Active Teams",
+    icon: Users,
+    color: "from-blue-500 to-purple-500",
+  },
+  {
+    metric: "99.9%",
+    label: "Uptime SLA",
+    icon: Star,
+    color: "from-green-500 to-emerald-500",
+  },
+  {
+    metric: "2M+",
+    label: "Projects Created",
+    icon: Layers,
+    color: "from-amber-500 to-orange-500",
+  },
+  {
+    metric: "150+",
+    label: "Countries",
+    icon: Globe,
+    color: "from-purple-500 to-pink-500",
+  },
+];
+
+const FOOTER_SECTIONS = [
+  {
+    title: "Product",
+    links: ["Features", "Integrations", "Pricing", "Changelog"],
+  },
+  { title: "Company", links: ["About", "Blog", "Careers", "Contact"] },
+  {
+    title: "Resources",
+    links: ["Documentation", "Help Center", "API", "Status"],
+  },
+];
 
 export default function HomePage() {
   const { isSignedIn } = useAuth();
@@ -38,13 +100,43 @@ export default function HomePage() {
     };
   }, []);
 
+  const renderNavLink = (item: string) => (
+    <Link
+      key={item}
+      href="/dashboard"
+      className="relative px-4 py-2 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors duration-200 group"
+    >
+      {item}
+      <span className="absolute inset-x-2 -bottom-px h-px bg-gradient-to-r from-purple-500/0 via-purple-500/70 to-purple-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+    </Link>
+  );
+
+  const renderFeatureCard = ({
+    icon: Icon,
+    text,
+    desc,
+  }: (typeof FEATURE_ITEMS)[0]) => (
+    <div
+      key={desc}
+      className="group relative p-6 rounded-2xl bg-white/50 backdrop-blur-sm border border-purple-100/50 hover:border-purple-300/50 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10"
+    >
+      <div className="relative space-y-4">
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100/50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+          <Icon className="h-6 w-6 text-purple-600" />
+        </div>
+        <div className="space-y-2">
+          <span className="font-semibold block text-gray-900">{text}</span>
+          <span className="text-sm text-gray-500">{desc}</span>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-white to-purple-50 scroll-smooth">
-      {/* Navigation - Modern Update */}
       <nav className="fixed top-0 w-full border-b border-purple-100/20 bg-white/80 backdrop-blur-md z-50">
         <div className="container mx-auto px-6">
           <div className="flex items-center justify-between h-16">
-            {/* Logo Section */}
             <Link href="/" className="flex items-center gap-x-2.5 group">
               <div className="relative">
                 <div className="absolute inset-0 bg-purple-500/20 rounded-lg blur-lg group-hover:bg-purple-500/30 transition-all duration-300" />
@@ -59,21 +151,10 @@ export default function HomePage() {
               </span>
             </Link>
 
-            {/* Center Navigation - Optional */}
             <div className="hidden md:flex items-center gap-x-1">
-              {["Features", "Solutions", "Pricing", "Resources"].map((item) => (
-                <Link
-                  key={item}
-                  href="/dashboard"
-                  className="relative px-4 py-2 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors duration-200 group"
-                >
-                  {item}
-                  <span className="absolute inset-x-2 -bottom-px h-px bg-gradient-to-r from-purple-500/0 via-purple-500/70 to-purple-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </Link>
-              ))}
+              {NAVIGATION_ITEMS.map(renderNavLink)}
             </div>
 
-            {/* Right Section */}
             <div className="flex items-center gap-x-3">
               {!isSignedIn && (
                 <Link href="/dashboard">
@@ -104,7 +185,6 @@ export default function HomePage() {
                 </Button>
               </Link>
 
-              {/* Mobile Menu Button - Updated */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="ml-2 p-1.5 rounded-lg text-gray-500 hover:text-purple-600 hover:bg-purple-50 transition-colors duration-200 md:hidden"
@@ -132,7 +212,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Mobile Navigation Menu */}
         <div
           className={`md:hidden absolute top-full left-0 right-0 bg-white border-b border-purple-100/20 transition-all duration-300 ${
             isMobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"
@@ -140,7 +219,7 @@ export default function HomePage() {
         >
           <div className="container mx-auto px-6 py-4">
             <div className="flex flex-col space-y-2">
-              {["Features", "Solutions", "Pricing", "Resources"].map((item) => (
+              {NAVIGATION_ITEMS.map((item) => (
                 <Link
                   key={item}
                   href="/dashboard"
@@ -163,15 +242,11 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Gradient Line */}
         <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-purple-500/20 to-transparent" />
       </nav>
 
-      {/* Hero Section */}
       <div className="flex-1 pt-32 relative overflow-hidden">
-        {/* Decorative Floating Elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {/* Gradient Orbs */}
           <div className="absolute top-20 -left-10 w-[600px] h-[600px]">
             <div className="absolute inset-0 bg-gradient-to-tr from-[#8c52ff]/20 to-purple-300/20 rounded-full blur-[120px] animate-float-slow" />
             <div className="absolute inset-0 bg-gradient-to-tr from-[#8c52ff]/10 to-blue-300/10 rounded-full blur-[120px] animate-float-reverse" />
@@ -181,19 +256,15 @@ export default function HomePage() {
             <div className="absolute inset-0 bg-gradient-to-tr from-[#7c4dff]/10 to-purple-300/10 rounded-full blur-[120px] animate-float-slow" />
           </div>
 
-          {/* Glowing Shapes */}
           <div className="absolute inset-0">
-            {/* Floating Circles */}
             <div className="absolute top-20 left-10 w-24 h-24 border-2 border-purple-500/20 rounded-full animate-spin-slow" />
             <div className="absolute top-40 right-20 w-32 h-32 border-2 border-blue-500/20 rounded-full animate-reverse-spin" />
 
-            {/* Glowing Rectangle */}
             <div className="absolute top-60 left-1/4 w-40 h-24">
               <div className="absolute inset-0 border-2 border-purple-500/20 rounded-xl animate-float" />
               <div className="absolute inset-0 border-2 border-purple-500/20 rounded-xl animate-float delay-100 rotate-3" />
             </div>
 
-            {/* Decorative Lines */}
             <svg
               className="absolute top-32 right-1/4 w-24 h-24 animate-float"
               viewBox="0 0 100 100"
@@ -210,7 +281,6 @@ export default function HomePage() {
               />
             </svg>
 
-            {/* Glowing Text Elements */}
             <div className="absolute bottom-40 right-20 text-sm font-light text-purple-500/30 animate-float-slow">
               collaborate
             </div>
@@ -218,7 +288,6 @@ export default function HomePage() {
               create
             </div>
 
-            {/* Animated SVG Shapes */}
             <svg
               className="absolute bottom-20 left-20 w-16 h-16 animate-float"
               viewBox="0 0 100 100"
@@ -249,7 +318,6 @@ export default function HomePage() {
               />
             </svg>
 
-            {/* Code-like Elements */}
             <div className="absolute top-20 right-1/4 text-xs font-mono text-purple-500/30 animate-float">
               &lt;canvas /&gt;
             </div>
@@ -257,7 +325,6 @@ export default function HomePage() {
         </div>
 
         <div className="container mx-auto px-4 relative">
-          {/* Hero Content */}
           <div className="max-w-5xl mx-auto text-center space-y-8">
             <div className="inline-block animate-fade-in mb-4">
               <div className="relative">
@@ -284,7 +351,6 @@ export default function HomePage() {
               security for modern teams.
             </p>
 
-            {/* Enhanced Feature Pills */}
             <div className="flex flex-wrap justify-center gap-3 my-6">
               {[
                 { text: "Enterprise Security", icon: "🔒" },
@@ -304,7 +370,6 @@ export default function HomePage() {
               ))}
             </div>
 
-            {/* Modern CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/dashboard">
                 <Button
@@ -322,28 +387,9 @@ export default function HomePage() {
                   </span>
                 </Button>
               </Link>
-              <Link href="/dashboard">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="relative group px-8 py-6 text-base font-medium
-                             backdrop-blur-sm bg-white/50 hover:bg-white/80 border-2 border-purple-100
-                             hover:border-purple-200 transition-all duration-300"
-                >
-                  <span className="relative flex items-center gap-2">
-                    <Github className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
-                    <span
-                      className="bg-clip-text text-transparent bg-gradient-to-r 
-                                   from-purple-700 to-purple-900 font-medium"
-                    >
-                      Star on GitHub
-                    </span>
-                  </span>
-                </Button>
-              </Link>
+              <GitStarButton />
             </div>
 
-            {/* Trust Indicators */}
             <div className="pt-6 flex flex-wrap items-center justify-center gap-6">
               {[
                 { icon: Shield, text: "SOC 2 Type II Certified" },
@@ -363,11 +409,9 @@ export default function HomePage() {
 
           <PreviewWhiteboardHome />
 
-          {/* Features & Social Proof Section */}
           <div className="mt-32 relative">
-            {/* Features Section */}
             <div className="w-full mx-auto px-4 mb-20">
-              <div className="flex items-center gap-2 mb-6">
+              <div className="flex items-center justify-center gap-2 mb-6">
                 <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 rounded-full">
                   <Shapes className="w-4 h-4 text-purple-600" />
                   <span className="text-sm font-medium text-purple-600">
@@ -376,92 +420,33 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="space-y-4 max-w-3xl">
-                <h2 className="text-4xl sm:text-6xl font-bold tracking-tight">
-                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#8c52ff] to-[#7c4dff]">
-                    Everything you need
-                  </span>
-                  <span className="block text-gray-900">
-                    to bring ideas to life
-                  </span>
-                </h2>
-                <p className="text-xl text-gray-500 leading-relaxed">
+              <div className="space-y-28">
+                <MorphingText
+                  texts={[
+                    "Everything you need",
+                    "to bring ideas to life",
+                    "to empower your team",
+                    "for seamless collaboration",
+                    "to drive innovation",
+                    "to scale globally",
+                    "for enterprise success",
+                  ]}
+                  className="text-[#8c52ff]"
+                />
+
+                <p className="text-xl text-center text-gray-500 leading-relaxed">
                   Powerful tools and features designed to enhance your
                   team&apos;s creativity and productivity.
                 </p>
               </div>
 
-              {/* Feature Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mt-16">
-                {[
-                  {
-                    icon: Pencil,
-                    text: "Drawing Tools",
-                    desc: "Precise tools for every need",
-                  },
-                  {
-                    icon: Shapes,
-                    text: "Shape Library",
-                    desc: "Ready-to-use shape collection",
-                  },
-                  {
-                    icon: StickyNote,
-                    text: "Sticky Notes",
-                    desc: "Quick thoughts and reminders",
-                  },
-                  {
-                    icon: Type,
-                    text: "Text Editor",
-                    desc: "Rich text formatting",
-                  },
-                  {
-                    icon: Layers,
-                    text: "Layer Control",
-                    desc: "Professional organization",
-                  },
-                  {
-                    icon: Undo2,
-                    text: "Version History",
-                    desc: "Track all changes",
-                  },
-                  {
-                    icon: Star,
-                    text: "Smart Features",
-                    desc: "AI-powered assistance",
-                  },
-                  {
-                    icon: Users,
-                    text: "Team Sharing",
-                    desc: "Seamless collaboration",
-                  },
-                ].map((item, i) => (
-                  <div
-                    key={i}
-                    className="group relative p-6 rounded-2xl bg-white/50 backdrop-blur-sm border border-purple-100/50 hover:border-purple-300/50 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10"
-                  >
-                    <div className="relative space-y-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100/50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                        <item.icon className="h-6 w-6 text-purple-600" />
-                      </div>
-                      <div className="space-y-2">
-                        <span className="font-semibold block text-gray-900">
-                          {item.text}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          {item.desc}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                {FEATURE_ITEMS.map((item, i) => renderFeatureCard(item))}
               </div>
             </div>
 
-            {/* Social Proof Section */}
             <div className="py-20 relative">
-              {/* Decorative Elements */}
               <div className="absolute inset-0 pointer-events-none">
-                {/* Gradient Orbs */}
                 <div className="absolute -left-40 top-20 w-[500px] h-[500px]">
                   <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/10 via-blue-500/10 to-transparent rounded-full blur-3xl animate-float-slow" />
                   <div className="absolute inset-0 bg-gradient-to-br from-[#8c52ff]/5 via-blue-500/5 to-transparent rounded-full blur-3xl animate-float-reverse" />
@@ -471,9 +456,7 @@ export default function HomePage() {
                   <div className="absolute inset-0 bg-gradient-to-tr from-[#7c4dff]/5 via-purple-500/5 to-transparent rounded-full blur-3xl animate-float-slow" />
                 </div>
 
-                {/* Floating Elements */}
                 <div className="absolute inset-0">
-                  {/* Decorative Lines */}
                   <svg
                     className="absolute top-20 left-1/4 w-24 h-24 animate-float"
                     viewBox="0 0 100 100"
@@ -490,11 +473,9 @@ export default function HomePage() {
                     />
                   </svg>
 
-                  {/* Floating Circles */}
                   <div className="absolute top-40 right-1/4 w-32 h-32 border border-purple-500/20 rounded-full animate-spin-slow" />
                   <div className="absolute bottom-40 left-1/3 w-24 h-24 border border-blue-500/20 rounded-full animate-reverse-spin" />
 
-                  {/* Code Elements */}
                   <div className="absolute top-1/4 right-1/4 text-xs font-mono text-purple-500/30 animate-float">
                     &lt;trust /&gt;
                   </div>
@@ -523,9 +504,7 @@ export default function HomePage() {
                   </p>
                 </div>
 
-                {/* Logo Cloud Section */}
                 <div className="relative py-16">
-                  {/* Gradient Fade Edges */}
                   <div className="absolute left-0 top-0 bottom-0 w-24 z-10" />
                   <div className="absolute right-0 top-0 bottom-0 w-24  to-transparent z-10" />
 
@@ -559,80 +538,44 @@ export default function HomePage() {
                       ].map((company, index) => (
                         <div
                           key={index}
-                          className="w-40 h-20 rounded-xl bg-white/80 backdrop-blur-sm border border-purple-100/50 p-4 
-                                     flex items-center justify-center group hover:border-purple-300/50 
-                                     transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 relative"
+                          className="relative w-40 h-20 rounded-xl bg-white/70 backdrop-blur-sm 
+                                     border border-gray-100 p-4 flex items-center justify-center
+                                     group hover:border-purple-200 hover:bg-white/90
+                                     transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
                         >
-                          {/* Subtle Background Pattern */}
-                          <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(45deg,#000_25%,transparent_25%),linear-gradient(-45deg,#000_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#000_75%),linear-gradient(-45deg,transparent_75%,#000_75%)] bg-[length:10px_10px]" />
-
-                          {/* Hover Gradient Background */}
                           <div
                             className={`absolute inset-0 bg-gradient-to-r ${company.gradient} 
-                                          opacity-0 group-hover:opacity-5 transition-opacity duration-300 rounded-xl`}
+                                          opacity-0 group-hover:opacity-[0.02] transition-opacity 
+                                          duration-300 rounded-xl`}
                           />
 
-                          {/* Company Name with Gradient on Hover */}
-                          <span className="font-display font-semibold text-lg relative">
+                          <span className="relative font-medium text-base">
                             <span
-                              className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 
-                                           opacity-0 group-hover:opacity-100 transition-opacity duration-300 
-                                           bg-clip-text text-transparent"
+                              className="block text-gray-800 group-hover:text-transparent 
+                                            group-hover:bg-clip-text group-hover:bg-gradient-to-r 
+                                            group-hover:from-purple-600 group-hover:to-blue-600
+                                            transition-all duration-300"
                             >
-                              {company.name}
-                            </span>
-                            <span className="group-hover:opacity-0 transition-opacity duration-300 text-gray-800">
                               {company.name}
                             </span>
                           </span>
 
-                          {/* Decorative Elements */}
-                          <div
-                            className="absolute -right-1 -top-1 w-3 h-3 rounded-full 
-                                         bg-gradient-to-r from-purple-500 to-blue-500 opacity-0 
-                                         group-hover:opacity-100 transition-all duration-300 
-                                         group-hover:scale-150"
-                          />
-                          <div
-                            className="absolute -left-1 -bottom-1 w-3 h-3 rounded-full 
-                                         bg-gradient-to-r from-blue-500 to-purple-500 opacity-0 
-                                         group-hover:opacity-100 transition-all duration-300 
-                                         group-hover:scale-150"
-                          />
+                          <div className="absolute top-0 right-0 w-8 h-8 overflow-hidden">
+                            <div
+                              className="absolute -right-4 -top-4 w-8 h-8 
+                                            bg-gradient-to-r from-purple-500/10 to-blue-500/10 
+                                            rotate-45 transform origin-bottom-left
+                                            opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                            />
+                          </div>
                         </div>
                       ))}
                     </div>
                   </div>
                 </div>
 
-                {/* Trust Metrics - Updated Layout */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mt-24">
-                  {[
-                    {
-                      metric: "10,000+",
-                      label: "Active Teams",
-                      icon: Users,
-                      color: "from-blue-500 to-purple-500",
-                    },
-                    {
-                      metric: "99.9%",
-                      label: "Uptime SLA",
-                      icon: Star,
-                      color: "from-green-500 to-emerald-500",
-                    },
-                    {
-                      metric: "2M+",
-                      label: "Projects Created",
-                      icon: Layers,
-                      color: "from-amber-500 to-orange-500",
-                    },
-                    {
-                      metric: "150+",
-                      label: "Countries",
-                      icon: Globe,
-                      color: "from-purple-500 to-pink-500",
-                    },
-                  ].map((item, index) => (
+                  {TRUST_METRICS.map((item, index) => (
                     <div
                       key={index}
                       className="group relative p-6 rounded-2xl bg-white/50 backdrop-blur-sm border border-gray-100 hover:border-purple-200 transition-all duration-300"
@@ -661,21 +604,16 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* CTA Section - Updated with Modern Floating Elements */}
           <div className="relative py-24">
-            {/* Floating Elements */}
             <div className="absolute inset-0 pointer-events-none">
-              {/* Glowing Orbs */}
               <div className="absolute -left-20 top-1/4 w-96 h-96">
                 <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/10 to-blue-500/10 rounded-full blur-3xl animate-float-slow" />
                 <div className="absolute inset-0 bg-gradient-to-bl from-[#8c52ff]/10 to-blue-300/10 rounded-full blur-3xl animate-float-reverse" />
               </div>
 
-              {/* Floating Shapes */}
               <div className="absolute top-20 right-1/4 w-16 h-16 border-2 border-purple-500/20 rounded-full animate-spin-slow" />
               <div className="absolute bottom-20 left-1/4 w-20 h-20 border-2 border-blue-500/20 rounded animate-float" />
 
-              {/* Mouse Cursor Trail */}
               <div className="absolute top-1/4 right-1/3">
                 <svg
                   width="24"
@@ -694,7 +632,6 @@ export default function HomePage() {
                 <div className="absolute -right-1 -top-1 w-3 h-3 bg-purple-500/20 rounded-full animate-ping" />
               </div>
 
-              {/* Code Notes */}
               <div className="absolute top-1/3 left-20 text-xs font-mono text-purple-500/30 animate-float-slow">
                 &lt;collaboration /&gt;
               </div>
@@ -702,7 +639,6 @@ export default function HomePage() {
                 {"{innovation: true}"}
               </div>
 
-              {/* Drawing Elements */}
               <svg
                 className="absolute bottom-20 right-1/4 w-24 h-24 animate-float-reverse"
                 viewBox="0 0 100 100"
@@ -735,7 +671,6 @@ export default function HomePage() {
                 />
               </svg>
 
-              {/* Decorative Lines */}
               <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent animate-pulse" />
               <div className="absolute bottom-1/3 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/20 to-transparent animate-pulse delay-150" />
             </div>
@@ -799,11 +734,9 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Footer - Updated Layout */}
       <footer className="relative border-t bg-white/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
-            {/* Brand Column */}
             <div className="lg:col-span-2">
               <div className="flex items-center gap-4 mb-6">
                 <img src="/logo.svg" alt="Plexifly Logo" className="h-8 w-8" />
@@ -827,21 +760,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Quick Links Columns */}
-            {[
-              {
-                title: "Product",
-                links: ["Features", "Integrations", "Pricing", "Changelog"],
-              },
-              {
-                title: "Company",
-                links: ["About", "Blog", "Careers", "Contact"],
-              },
-              {
-                title: "Resources",
-                links: ["Documentation", "Help Center", "API", "Status"],
-              },
-            ].map((section, index) => (
+            {FOOTER_SECTIONS.map((section, index) => (
               <div key={index}>
                 <h3 className="font-semibold text-gray-900 mb-4">
                   {section.title}
@@ -862,7 +781,6 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Bottom Bar */}
           <div className="mt-16 pt-8 border-t border-gray-100">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
               <div className="text-sm text-gray-500">
