@@ -1,5 +1,5 @@
 import { Plus } from "lucide-react";
-import { OrganizationProfile, OrganizationSwitcher } from "@clerk/nextjs";
+import { OrganizationProfile } from "@clerk/nextjs";
 import {
   Dialog,
   DialogContent,
