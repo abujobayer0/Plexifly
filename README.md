@@ -25,7 +25,7 @@ Plexifly is a modern real-time collaboration platform built with Next.js, enabli
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/plexifly.git
+git clone https://github.com/abujobayer0/Plexifly.git
 cd plexifly/frontend
 ```
 
@@ -65,6 +65,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - [Liveblocks](https://liveblocks.io/) - Real-time collaboration
 - [Shadcn UI](https://ui.shadcn.com/) - UI components
 - [Clerk](https://clerk.com/) - Authentication
+- [Convex](https://www.convex.dev/) - Realtime Database
 
 ## 📁 Project Structure
 
@@ -111,9 +112,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Vercel for the deployment platform
 - Liveblocks for real-time collaboration features
 - Shadcn for the beautiful UI components
+- Convex for Realtime Database
 
 ---
 
 Made with ❤️ by [Abu Jobayer](https://www.linkedin.com/in/abutalhamdjobayer)
 
-Need help? [Open an Issue](https://github.com/abujobayer0/Zyler/issues)
+Need help? [Open an Issue](https://github.com/abujobayer0/Plexifly/issues)
