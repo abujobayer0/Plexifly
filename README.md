@@ -2,7 +2,7 @@
 
 Plexifly is a modern real-time collaboration platform built with Next.js, enabling teams to work together seamlessly on shared whiteboards and projects.
 
-![Plexifly](./public/logo.png) <!-- You can add a banner image later -->
+<img src="./public/logo.png" alt="Plexifly" width="200"/>
 
 ## ✨ Features
 
