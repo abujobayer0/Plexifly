@@ -11,6 +11,7 @@ import Path from "./path";
 import { PolygonShape } from "./polygon-shape";
 import { Table } from "./table";
 import { Frame } from "./frame";
+import { BoardImage } from "./image";
 import { Line } from "./line";
 import { colorToCss } from "@/lib/utils";
 
@@ -83,6 +84,15 @@ export const LayerPreview = memo(
         case LayerType.Table:
           return (
             <Table
+              id={id}
+              onPointerDown={onLayerPointerDown}
+              layer={layer}
+              selectionColor={selectionColor}
+            />
+          );
+        case LayerType.Image:
+          return (
+            <BoardImage
               id={id}
               onPointerDown={onLayerPointerDown}
               layer={layer}

@@ -25,6 +25,7 @@ export enum LayerType {
   Cylinder,
   Table,
   Frame,
+  Image,
 }
 
 // Filled outline shapes drawn from a point list (flowchart / diagram shapes).
@@ -149,6 +150,18 @@ export type FrameLayer = {
   value?: string;
 };
 
+// An uploaded picture; src is its Convex file storage URL.
+export type ImageLayer = {
+  type: LayerType.Image;
+  x: number;
+  y: number;
+  height: number;
+  width: number;
+  fill: Color;
+  src: string;
+  value?: string;
+};
+
 export type Point = {
   x: number;
   y: number;
@@ -229,4 +242,5 @@ export type Layer =
   | PolygonLayer
   | LineLayer
   | TableLayer
-  | FrameLayer;
+  | FrameLayer
+  | ImageLayer;

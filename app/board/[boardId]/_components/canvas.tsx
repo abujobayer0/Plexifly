@@ -66,6 +66,13 @@ import {
   updateConnectors,
 } from "@/lib/connectors";
 import { shallow } from "@liveblocks/client";
+import { toast } from "sonner";
+import { ImagePlus } from "lucide-react";
+import {
+  MAX_IMAGE_BYTES,
+  getImageSize,
+  useImageUpload,
+} from "@/hooks/use-image-upload";
 
 const MAX_LAYERS = 1000;
 const GRID_SIZE = 24;
@@ -74,6 +81,8 @@ const MAX_ZOOM = 5;
 // Drags shorter than this (in canvas units) count as a click.
 const DRAG_THRESHOLD = 5;
 const PASTE_OFFSET = 20;
+// Longest side, in canvas units, of a newly added image.
+const MAX_IMAGE_SIZE = 480;
 
 // Size used when a shape tool is clicked instead of dragged.
 const DEFAULT_SIZES: Record<InsertableLayerType, { w: number; h: number }> = {
@@ -246,6 +255,9 @@ export default function Canvas({ boardId }: CanvasProps) {
   const [connectorHoverId, setConnectorHoverId] = useState<string | null>(
     null
   );
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
+  // Last pointer position over the canvas, where pasted images land.
+  const lastPointerScreenRef = useRef<Point | null>(null);
   const pasteCountRef = useRef(0);
 
   useDisableScrollBounce();
@@ -522,6 +534,76 @@ export default function Canvas({ boardId }: CanvasProps) {
       setCanvasState({ mode: CanvasMode.None });
     },
     [camera]
+  );
+
+  const insertImage = useMutation(
+    (
+      { storage, setMyPresence },
+      src: string,
+      center: Point,
+      size: { width: number; height: number }
+    ) => {
+      const liveLayers = storage.get("layers");
+      if (liveLayers.size >= MAX_LAYERS) return;
+      const id = nanoid();
+      liveLayers.set(
+        id,
+        new LiveObject<Layer>({
+          type: LayerType.Image,
+          x: center.x - size.width / 2,
+          y: center.y - size.height / 2,
+          width: size.width,
+          height: size.height,
+          fill: TEMPLATE_COLORS.gray,
+          src,
+        })
+      );
+      storage.get("layerIds").push(id);
+      setMyPresence({ selection: [id] }, { addToHistory: true });
+      setCanvasState({ mode: CanvasMode.None });
+    },
+    []
+  );
+
+  const uploadImage = useImageUpload();
+
+  // Uploads image files and places them around a screen point.
+  const addImageFiles = useCallback(
+    (files: File[], screenPoint: Point) => {
+      const images = files.filter((file) => file.type.startsWith("image/"));
+      images.forEach((file, index) => {
+        if (file.size > MAX_IMAGE_BYTES) {
+          toast.error(`${file.name || "Image"} is larger than 10 MB`);
+          return;
+        }
+        // Resolve the drop point now; the camera may move during upload.
+        const center = {
+          x: (screenPoint.x - camera.x) / camera.zoom + index * PASTE_OFFSET,
+          y: (screenPoint.y - camera.y) / camera.zoom + index * PASTE_OFFSET,
+        };
+        const upload = async () => {
+          const [src, natural] = await Promise.all([
+            uploadImage(file),
+            getImageSize(file),
+          ]);
+          const scale = Math.min(
+            1,
+            MAX_IMAGE_SIZE / Math.max(natural.width, natural.height, 1)
+          );
+          insertImage(src, center, {
+            width: Math.max(natural.width * scale, 24),
+            height: Math.max(natural.height * scale, 24),
+          });
+        };
+        toast.promise(upload(), {
+          loading: "Uploading image…",
+          success: "Image added",
+          error: "Couldn't upload image",
+        });
+      });
+      return images.length;
+    },
+    [camera, uploadImage, insertImage]
   );
 
   const eraseLayers = useMutation(
@@ -828,6 +910,7 @@ export default function Canvas({ boardId }: CanvasProps) {
   const onPointerMove = useMutation(
     ({ setMyPresence }, e: React.PointerEvent) => {
       e.preventDefault();
+      lastPointerScreenRef.current = { x: e.clientX, y: e.clientY };
 
       const panLast = panLastPointRef.current;
       if (panLast != null) {
@@ -1102,10 +1185,6 @@ export default function Canvas({ boardId }: CanvasProps) {
           case "c":
             copySelectedLayers();
             break;
-          case "v":
-            e.preventDefault();
-            pasteLayers();
-            break;
           case "d":
             e.preventDefault();
             duplicateSelectedLayers();
@@ -1173,12 +1252,34 @@ export default function Canvas({ boardId }: CanvasProps) {
       if (e.key === " ") setIsSpacePressed(false);
     }
 
+    // Pasted images are uploaded at the pointer; otherwise paste copied
+    // board layers.
+    function onPaste(e: ClipboardEvent) {
+      const target = e.target as HTMLElement | null;
+      if (
+        target?.isContentEditable ||
+        target?.tagName === "INPUT" ||
+        target?.tagName === "TEXTAREA"
+      ) {
+        return;
+      }
+      const files = Array.from(e.clipboardData?.files ?? []);
+      const point = lastPointerScreenRef.current ?? {
+        x: window.innerWidth / 2,
+        y: window.innerHeight / 2,
+      };
+      e.preventDefault();
+      if (addImageFiles(files, point) === 0) pasteLayers();
+    }
+
     document.addEventListener("keydown", onKeyDown);
     document.addEventListener("keyup", onKeyUp);
+    document.addEventListener("paste", onPaste);
 
     return () => {
       document.removeEventListener("keydown", onKeyDown);
       document.removeEventListener("keyup", onKeyUp);
+      document.removeEventListener("paste", onPaste);
     };
   }, [
     deleteLayers,
@@ -1195,6 +1296,7 @@ export default function Canvas({ boardId }: CanvasProps) {
     onToolChange,
     groupIntoSection,
     ungroupSections,
+    addImageFiles,
   ]);
 
   if (status === "connecting" || status === "reconnecting") {
@@ -1225,7 +1327,39 @@ export default function Canvas({ boardId }: CanvasProps) {
       : null;
 
   return (
-    <main className="h-full w-full relative bg-[#f8f9fb] touch-none overflow-hidden">
+    <main
+      className="h-full w-full relative bg-[#f8f9fb] touch-none overflow-hidden"
+      onDragOver={(e) => {
+        if (!e.dataTransfer.types.includes("Files")) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "copy";
+        if (!isDraggingFile) setIsDraggingFile(true);
+      }}
+      onDragLeave={(e) => {
+        // Ignore leaves into child elements.
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+          setIsDraggingFile(false);
+        }
+      }}
+      onDrop={(e) => {
+        if (!e.dataTransfer.types.includes("Files")) return;
+        e.preventDefault();
+        setIsDraggingFile(false);
+        const added = addImageFiles(Array.from(e.dataTransfer.files), {
+          x: e.clientX,
+          y: e.clientY,
+        });
+        if (added === 0) toast.error("Only image files can be dropped here");
+      }}
+    >
+      {isDraggingFile && (
+        <div className="pointer-events-none absolute inset-3 z-20 rounded-3xl border-2 border-dashed border-indigo-400 bg-indigo-500/[0.04] flex items-center justify-center">
+          <div className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-indigo-600 shadow-lg">
+            <ImagePlus className="h-4 w-4" />
+            Drop images to add them to the board
+          </div>
+        </div>
+      )}
       <Info boardId={boardId} />
       <Participants />
       <Toolbar
