@@ -10,6 +10,9 @@ interface PathProps {
   onPointerDown?: (e: React.PointerEvent) => void;
   fill?: string;
   stroke?: string;
+  // Finished strokes must reach their last point; without this the
+  // streamline smoothing leaves quick strokes visibly cut short.
+  isComplete?: boolean;
 }
 export default function Path({
   x,
@@ -19,6 +22,7 @@ export default function Path({
   onPointerDown,
   fill,
   stroke,
+  isComplete = true,
 }: PathProps) {
   return (
     <path
@@ -32,6 +36,7 @@ export default function Path({
           streamline: 0.6,
           easing: (t) => t * t,
           simulatePressure: true,
+          last: isComplete,
         })
       )}
       style={{

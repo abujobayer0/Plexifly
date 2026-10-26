@@ -3,6 +3,7 @@ import { colorToCss } from "@/lib/utils";
 import { Color } from "@/types/canvas";
 import React, { useState } from "react";
 import { HexColorPicker } from "react-colorful";
+import { Plus } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -12,93 +13,94 @@ import { cn } from "@/lib/utils";
 
 interface ColorPickerProps {
   onChange: (color: Color) => void;
+  // Highlights the matching swatch when provided.
+  value?: Color;
 }
 
-export const ColorPicker = ({ onChange }: ColorPickerProps) => {
-  const [selectedColor, setSelectedColor] = useState<Color>({
-    r: 0,
-    g: 0,
-    b: 0,
-  });
-  const [colorHistory, setColorHistory] = useState<Color[]>([]);
+const PRESET_COLORS: Color[] = [
+  { r: 30, g: 30, b: 30 },
+  { r: 115, g: 115, b: 115 },
+  { r: 239, g: 68, b: 68 },
+  { r: 249, g: 115, b: 22 },
+  { r: 250, g: 204, b: 21 },
+  { r: 34, g: 197, b: 94 },
+  { r: 20, g: 184, b: 166 },
+  { r: 59, g: 130, b: 246 },
+  { r: 99, g: 102, b: 241 },
+  { r: 168, g: 85, b: 247 },
+  { r: 236, g: 72, b: 153 },
+  { r: 255, g: 255, b: 255 },
+];
 
-  const presetColors = [
-    { r: 0, g: 0, b: 0 },
-    { r: 87, g: 87, b: 87 },
-    { r: 243, g: 83, b: 255 },
-    { r: 255, g: 0, b: 0 },
-    { r: 0, g: 0, b: 255 },
-    { r: 255, g: 235, b: 59 },
-    { r: 255, g: 152, b: 0 },
-    { r: 156, g: 39, b: 176 },
-    { r: 0, g: 188, b: 212 },
-    { r: 76, g: 175, b: 80 },
-  ];
+const isSameColor = (a?: Color, b?: Color) =>
+  a != null && b != null && a.r === b.r && a.g === b.g && a.b === b.b;
+
+export const ColorPicker = ({ onChange, value }: ColorPickerProps) => {
+  const [customColor, setCustomColor] = useState<Color>(
+    value ?? { r: 0, g: 0, b: 0 }
+  );
+  const [colorHistory, setColorHistory] = useState<Color[]>([]);
 
   const handleColorChange = (color: Color) => {
     onChange(color);
-    setSelectedColor(color);
+    setCustomColor(color);
+  };
 
+  const rememberColor = (color: Color) => {
     if (
-      !colorHistory.some(
-        (c) => c.r === color.r && c.g === color.g && c.b === color.b
-      )
+      !PRESET_COLORS.some((c) => isSameColor(c, color)) &&
+      !colorHistory.some((c) => isSameColor(c, color))
     ) {
-      setColorHistory((prev) => [color, ...prev].slice(0, 5));
+      setColorHistory((prev) => [color, ...prev].slice(0, 6));
     }
   };
 
   return (
-    <div className="flex flex-col gap-3 p-4 ">
-      <div className="flex flex-wrap gap-2 items-center">
-        {presetColors.map((color, index) => (
-          <ColorButton key={index} color={color} onClick={handleColorChange} />
+    <div className="flex flex-col gap-2">
+      <div className="grid grid-cols-6 gap-1.5">
+        {PRESET_COLORS.map((color, index) => (
+          <ColorButton
+            key={index}
+            color={color}
+            onClick={handleColorChange}
+            isSelected={isSameColor(color, value)}
+          />
         ))}
-
-        <Popover>
+      </div>
+      <div className="flex items-center gap-1.5">
+        {colorHistory.map((color, index) => (
+          <ColorButton
+            key={`history-${index}`}
+            color={color}
+            onClick={handleColorChange}
+            isSelected={isSameColor(color, value)}
+          />
+        ))}
+        <Popover onOpenChange={(open) => !open && rememberColor(customColor)}>
           <PopoverTrigger asChild>
-            <button className="w-8 h-8 flex items-center justify-center rounded-lg border-2 border-dashed border-neutral-300 hover:border-neutral-400 hover:bg-neutral-50 transition">
-              <span className="text-neutral-500 text-xl">+</span>
+            <button
+              type="button"
+              aria-label="Custom color"
+              className="h-6 w-6 flex items-center justify-center rounded-full border border-dashed border-neutral-300 text-neutral-500 hover:border-neutral-400 hover:text-neutral-700 transition"
+            >
+              <Plus className="h-3.5 w-3.5" />
             </button>
           </PopoverTrigger>
-          <PopoverContent className="w-64 p-3 rounded-xl border border-neutral-200 shadow-xl">
-            <div className="space-y-3">
-              <HexColorPicker
-                color={`rgb(${selectedColor.r},${selectedColor.g},${selectedColor.b})`}
-                onChange={(color) => {
-                  const result =
-                    /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(color);
-                  if (result) {
-                    const newColor = {
-                      r: parseInt(result[1], 16),
-                      g: parseInt(result[2], 16),
-                      b: parseInt(result[3], 16),
-                    };
-                    handleColorChange(newColor);
-                  }
-                }}
-              />
-              {colorHistory.length > 0 && (
-                <div className="pt-3 border-t border-neutral-200">
-                  <p className="text-xs text-neutral-500 mb-2">Recent Colors</p>
-                  <div className="flex gap-2">
-                    {colorHistory.map((color, index) => (
-                      <ColorButton
-                        key={`history-${index}`}
-                        color={color}
-                        onClick={handleColorChange}
-                        isSelected={
-                          color.r === selectedColor.r &&
-                          color.g === selectedColor.g &&
-                          color.b === selectedColor.b
-                        }
-                        size="sm"
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+          <PopoverContent className="w-auto p-3 rounded-xl border border-neutral-200 shadow-xl">
+            <HexColorPicker
+              color={colorToCss(customColor)}
+              onChange={(color) => {
+                const result =
+                  /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(color);
+                if (result) {
+                  handleColorChange({
+                    r: parseInt(result[1], 16),
+                    g: parseInt(result[2], 16),
+                    b: parseInt(result[3], 16),
+                  });
+                }
+              }}
+            />
           </PopoverContent>
         </Popover>
       </div>
@@ -110,27 +112,20 @@ interface ColorButtonProps {
   onClick: (color: Color) => void;
   color: Color;
   isSelected?: boolean;
-  size?: "sm" | "default";
 }
 
-const ColorButton = ({
-  onClick,
-  color,
-  size = "default",
-}: ColorButtonProps) => {
-  const sizeClasses = size === "sm" ? "w-6 h-6" : "w-8 h-8";
-
+const ColorButton = ({ onClick, color, isSelected }: ColorButtonProps) => {
   return (
     <button
-      className={`relative ${sizeClasses} items-center flex justify-center hover:opacity-75 transition`}
+      type="button"
+      aria-label={colorToCss(color)}
+      className={cn(
+        "h-6 w-6 rounded-full transition-transform hover:scale-110",
+        "shadow-[inset_0_0_0_1px_rgba(0,0,0,0.12)]",
+        isSelected && "ring-2 ring-indigo-500 ring-offset-2"
+      )}
+      style={{ background: colorToCss(color) }}
       onClick={() => onClick(color)}
-    >
-      <div
-        className={cn(`${sizeClasses} rounded-lg border border-neutral-200`)}
-        style={{
-          background: colorToCss(color),
-        }}
-      />
-    </button>
+    />
   );
 };

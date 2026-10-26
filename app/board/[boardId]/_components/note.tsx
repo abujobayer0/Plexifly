@@ -1,7 +1,7 @@
 import { Inter } from "next/font/google";
 import ContentEditable, { ContentEditableEvent } from "react-contenteditable";
 import { NoteLayer } from "@/types/canvas";
-import { cn, colorToCss, getContrastingTextColor } from "@/lib/utils";
+import { cn, colorToCss, tintColor } from "@/lib/utils";
 import { useMutation } from "@liveblocks/react";
 
 const font = Inter({
@@ -9,13 +9,15 @@ const font = Inter({
   weight: ["400", "500"],
 });
 
-const calculateFontSize = (width: number, height: number) => {
-  const maxFontSize = 72;
-  const scaleFactor = 0.12;
-  const fontSizeBasedOnHeight = height * scaleFactor;
-  const fontSizeBasedOnWidth = width * scaleFactor;
+const FOLD_SIZE = 22;
 
-  return Math.min(fontSizeBasedOnHeight, fontSizeBasedOnWidth, maxFontSize);
+const calculateFontSize = (width: number, height: number) => {
+  const maxFontSize = 40;
+  const scaleFactor = 0.085;
+  return Math.max(
+    12,
+    Math.min(width * scaleFactor, height * scaleFactor, maxFontSize)
+  );
 };
 
 interface NoteProps {
@@ -42,6 +44,11 @@ export const Note = ({
     updateValue(e.target.value);
   };
 
+  // Notes render as soft pastel paper derived from the chosen color.
+  const paper = colorToCss(tintColor(fill, 0.55));
+  const fold = colorToCss(tintColor(fill, 0.3));
+  const accent = colorToCss(tintColor(fill, 0.2));
+
   return (
     <foreignObject
       x={x}
@@ -49,83 +56,58 @@ export const Note = ({
       width={width}
       height={height}
       onPointerDown={(e) => onPointerDown(e, id)}
-      style={{
-        outline: selectionColor ? `2px solid ${selectionColor}` : "none",
-        backgroundColor: "transparent",
-      }}
-      className="group"
+      className="overflow-visible"
     >
       <div
-        className={cn(
-          "w-full h-full rounded-xl overflow-hidden flex flex-col",
-          "shadow-lg",
-          "transition-all duration-300",
-          "backdrop-blur-sm",
-          "relative"
-        )}
+        className="relative h-full w-full"
         style={{
-          backgroundColor: fill
-            ? `${colorToCss(fill)}95`
-            : "rgba(255, 255, 255, 0.95)",
-          border: `1px solid ${fill ? `${colorToCss(fill)}` : "rgba(0,0,0,0.12)"}`,
+          filter:
+            "drop-shadow(0 1px 1px rgba(0,0,0,0.05)) drop-shadow(0 8px 16px rgba(0,0,0,0.14))",
         }}
       >
-        {/* Note Header */}
         <div
-          className="px-3 py-2 flex items-center gap-2"
+          className="h-full w-full flex flex-col rounded-md"
           style={{
-            borderBottom: `1px solid ${fill ? `${colorToCss(fill)}` : "rgba(0,0,0,0.12)"}`,
-            backgroundColor: fill
-              ? `${colorToCss(fill)}90`
-              : "rgba(255,255,255,0.9)",
+            background: paper,
+            outline: selectionColor ? `2px solid ${selectionColor}` : "none",
+            // Cut the bottom-right corner for the folded-paper look.
+            clipPath: `polygon(0 0, 100% 0, 100% calc(100% - ${FOLD_SIZE}px), calc(100% - ${FOLD_SIZE}px) 100%, 0 100%)`,
           }}
         >
           <div
-            className="w-2 h-2 rounded-full"
+            className="h-1.5 w-full shrink-0 rounded-t-md opacity-70"
+            style={{ background: accent }}
+          />
+          <ContentEditable
+            html={value || ""}
+            onChange={handleContentChange}
+            // While editing, let the pointer select text instead of
+            // dragging the note.
+            onPointerDown={(e: React.PointerEvent) => {
+              if (e.currentTarget === document.activeElement) {
+                e.stopPropagation();
+              }
+            }}
+            data-placeholder="Type something…"
+            className={cn(
+              "flex-1 w-full outline-none px-4 py-3 select-text",
+              "break-words overflow-hidden leading-snug",
+              "empty:before:content-[attr(data-placeholder)] empty:before:text-black/30",
+              font.className
+            )}
             style={{
-              backgroundColor: fill ? colorToCss(fill) : "#4a4a4a",
-              border: `1px solid ${fill ? getContrastingTextColor(fill) : "rgba(0,0,0,0.2)"}`,
+              color: "#1f2937",
+              fontSize: calculateFontSize(width, height),
+              fontWeight: 400,
             }}
           />
-          <span
-            className={cn("text-xs font-medium tracking-tight", font.className)}
-            style={{
-              color: fill ? getContrastingTextColor(fill) : "rgba(0,0,0,0.8)",
-            }}
-          >
-            Note
-          </span>
         </div>
-
-        {/* Note Content */}
-        <ContentEditable
-          html={value || "Type your note..."}
-          onChange={handleContentChange}
-          className={cn(
-            "flex-1 w-full outline-none px-4 py-3",
-            "break-words overflow-auto",
-            "scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent",
-            font.className,
-            "relative z-10"
-          )}
-          style={{
-            color: fill ? getContrastingTextColor(fill) : "rgba(0,0,0,0.9)",
-            fontSize: calculateFontSize(width, height) * 0.75,
-            fontWeight: 400,
-            letterSpacing: "-0.01em",
-          }}
-        />
-
         <div
-          className="absolute inset-0 opacity-40 pointer-events-none"
+          className="absolute bottom-0 right-0 rounded-tl-md"
           style={{
-            background: `
-              linear-gradient(
-                135deg,
-                ${fill ? `${colorToCss(fill)}` : "rgba(255,255,255,0.8)"} 0%,
-                transparent 100%
-              )
-            `,
+            width: FOLD_SIZE,
+            height: FOLD_SIZE,
+            background: `linear-gradient(135deg, ${fold} 50%, transparent 50%)`,
           }}
         />
       </div>

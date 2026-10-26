@@ -42,8 +42,8 @@ export function pointerEventToCanvasPoint(
   camera: Camera
 ) {
   return {
-    x: Math.round(e.clientX) - camera.x,
-    y: Math.round(e.clientY) - camera.y,
+    x: (Math.round(e.clientX) - camera.x) / camera.zoom,
+    y: (Math.round(e.clientY) - camera.y) / camera.zoom,
   };
 }
 
@@ -95,6 +95,19 @@ export function findIntersectingLayersWithRectangle(
     const layer = layers.get(layerId);
     if (layer == null) continue;
     const { x, y, width, height } = layer;
+    // Frames are only picked up when fully enclosed, so box-selecting
+    // inside a frame doesn't grab the frame itself.
+    if (layer.type === LayerType.Frame) {
+      if (
+        rect.x <= x &&
+        rect.y <= y &&
+        rect.x + rect.width >= x + width &&
+        rect.y + rect.height >= y + height
+      ) {
+        ids.push(layerId);
+      }
+      continue;
+    }
     if (
       rect.x + rect.width > x &&
       rect.x < x + width &&
@@ -106,6 +119,30 @@ export function findIntersectingLayersWithRectangle(
   }
 
   return ids;
+}
+
+// Mixes a color toward white; amount 0 keeps it, 1 gives white.
+export function tintColor(color: Color, amount: number): Color {
+  const mix = (c: number) => Math.round(c + (255 - c) * amount);
+  return { r: mix(color.r), g: mix(color.g), b: mix(color.b) };
+}
+
+// Puts the caret in a layer's editable label (shapes, frames).
+export function focusLayerLabel(layerId: string) {
+  const el = document.querySelector<HTMLElement>(
+    `[data-label-for="${layerId}"]`
+  );
+  if (!el) return;
+  el.focus();
+  // Select after the focus re-render: react-contenteditable moves the caret
+  // to the end whenever it updates while focused.
+  setTimeout(() => {
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+  }, 0);
 }
 
 export function getContrastingTextColor(color: Color) {

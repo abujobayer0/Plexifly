@@ -1,4 +1,5 @@
 import { useSelf, useMutation } from "@liveblocks/react";
+import { updateConnectors } from "@/lib/connectors";
 
 export const useDeleteLayers = () => {
   const selection = useSelf((me) => me.presence.selection)!;
@@ -14,8 +15,10 @@ export const useDeleteLayers = () => {
         if (index !== -1) {
           liveLayersIds.delete(index);
         }
-        setMyPresence({ selection: [] }, { addToHistory: true });
       }
+      // Detach connectors that pointed at the deleted layers.
+      updateConnectors(liveLayers, new Set(selection));
+      setMyPresence({ selection: [] }, { addToHistory: true });
     },
     [selection]
   );

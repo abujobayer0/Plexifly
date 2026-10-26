@@ -26,7 +26,7 @@ export const Cursor = memo(({ connectionId }: CursorProps) => {
       }}
       height={50}
       width={name.length * 10 + 32}
-      className="relative drop-shadow-md transition-transform duration-200 ease-in-out"
+      className="relative pointer-events-none drop-shadow-md transition-transform duration-200 ease-in-out"
     >
       <MousePointer2
         className="h-5 w-5 animate-pulse-subtle"

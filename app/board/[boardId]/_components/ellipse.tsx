@@ -1,6 +1,7 @@
 import React from "react";
-import { colorToCss } from "@/lib/utils";
+import { colorToCss, focusLayerLabel } from "@/lib/utils";
 import { EllipseLayer } from "@/types/canvas";
+import { ShapeLabel } from "./shape-label";
 
 interface EllipseProps {
   id: string;
@@ -15,24 +16,38 @@ export const Ellipse = ({
   onPointerDown,
   selectionColor,
 }: EllipseProps) => {
-  const { x, y, width, height, fill } = layer;
+  const { x, y, width, height, fill, value } = layer;
+  const color = fill ? colorToCss(fill) : "#000";
 
   return (
-    <ellipse
-      className="hover:opacity-90"
+    <g
       onPointerDown={(e) => onPointerDown(e, id)}
-      style={{
-        transform: `translate(${x}px, ${y}px)`,
-      }}
-      cx={width / 2}
-      cy={height / 2}
-      rx={width / 2}
-      ry={height / 2}
-      strokeWidth={3}
-      stroke={selectionColor || colorToCss(fill) || "#000"}
-      fill="transparent"
-      strokeLinecap="round"
-      strokeDasharray="0"
-    />
+      onDoubleClick={() => focusLayerLabel(id)}
+    >
+      <ellipse
+        className="hover:opacity-90"
+        style={{
+          transform: `translate(${x}px, ${y}px)`,
+        }}
+        cx={width / 2}
+        cy={height / 2}
+        rx={width / 2}
+        ry={height / 2}
+        strokeWidth={3}
+        stroke={selectionColor || color}
+        fill="transparent"
+        strokeLinecap="round"
+      />
+      <ShapeLabel
+        id={id}
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        value={value}
+        color={color}
+        inset={{ x: width * 0.15, y: height * 0.15 }}
+      />
+    </g>
   );
 };

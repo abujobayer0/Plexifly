@@ -2,22 +2,50 @@
 
 import React, { memo } from "react";
 import { useSelectionBounds } from "@/hooks/use-selection-bounds";
-import { Camera, Color } from "@/types/canvas";
-import { useMutation, useSelf } from "@liveblocks/react";
+import { Camera, Color, LayerType } from "@/types/canvas";
+import { useMutation, useSelf, useStorage } from "@liveblocks/react";
 import { ColorPicker } from "./color-picker";
 import { useDeleteLayers } from "@/hooks/use-delete-layers";
 import { Hint } from "@/components/hint";
 import { Button } from "@/components/ui/button";
-import { BringToFront, SendToBack, Trash2 } from "lucide-react";
+import {
+  BringToFront,
+  Copy,
+  Group,
+  SendToBack,
+  Trash2,
+  Ungroup,
+} from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { colorToCss } from "@/lib/utils";
 
 interface SelectionToolsProps {
   camera: Camera;
   setLastUsedColor: (color: Color) => void;
+  onDuplicate: () => void;
+  onGroup: () => void;
+  onUngroup: () => void;
 }
 
+const buttonClassName =
+  "h-8 w-8 rounded-lg text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 transition";
+
 export const SelectionTools = memo(
-  ({ camera, setLastUsedColor }: SelectionToolsProps) => {
+  ({
+    camera,
+    setLastUsedColor,
+    onDuplicate,
+    onGroup,
+    onUngroup,
+  }: SelectionToolsProps) => {
     const selection = useSelf((me) => me.presence.selection);
+    const selectedFill = useStorage((root) =>
+      selection?.[0] ? root.layers.get(selection[0])?.fill : undefined
+    );
 
     const bringToFront = useMutation(
       ({ storage }) => {
@@ -70,6 +98,49 @@ export const SelectionTools = memo(
       [selection, setLastUsedColor]
     );
 
+    // Row/column count of the selection when it is a single table.
+    const tableSize = useStorage((root) => {
+      if (selection?.length !== 1) return null;
+      const layer = root.layers.get(selection[0]);
+      if (layer?.type !== LayerType.Table) return null;
+      return { rows: layer.cells.length, cols: layer.cells[0]?.length ?? 0 };
+    }, (a, b) => a?.rows === b?.rows && a?.cols === b?.cols);
+
+    const resizeTable = useMutation(
+      ({ storage }, rowDelta: number, colDelta: number) => {
+        const liveLayer = storage.get("layers").get(selection?.[0] ?? "");
+        const layer = liveLayer?.toImmutable();
+        if (!liveLayer || layer?.type !== LayerType.Table) return;
+
+        const rows = layer.cells.length;
+        const cols = layer.cells[0]?.length ?? 0;
+        const nextRows = Math.max(1, rows + rowDelta);
+        const nextCols = Math.max(1, cols + colDelta);
+        if (nextRows === rows && nextCols === cols) return;
+
+        const cells = Array.from({ length: nextRows }, (_, r) =>
+          Array.from({ length: nextCols }, (_, c) => {
+            const existing = layer.cells[r]?.[c];
+            if (existing !== undefined) return existing;
+            return r === 0 ? `Column ${c + 1}` : "";
+          })
+        );
+        // Grow or shrink the table so rows/columns keep their size.
+        liveLayer.update({
+          cells,
+          width: (layer.width / cols) * nextCols,
+          height: (layer.height / rows) * nextRows,
+        });
+      },
+      [selection]
+    );
+
+    const hasSection = useStorage((root) =>
+      (selection ?? []).some(
+        (id) => root.layers.get(id)?.type === LayerType.Frame
+      )
+    );
+
     const deleteLayers = useDeleteLayers();
 
     const selectionBounds = useSelectionBounds();
@@ -78,56 +149,138 @@ export const SelectionTools = memo(
     }
 
     const x = selectionBounds.width / 2 + selectionBounds.x;
-    const y = selectionBounds.y - 10;
+    const y = selectionBounds.y - 12 / camera.zoom;
 
     return (
       <div
-        className="w-fit px-1.5 py-2 bottom-2 rounded-xl shadow-lg backdrop-blur-[12px] bg-white/70 border border-white/20  flex justify-center items-center h-12 select-none gap-3"
+        className="absolute top-0 left-0 z-10 p-1 rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.1)] bg-white/95 backdrop-blur-xl border border-neutral-200/70 flex items-center gap-0.5 select-none"
+        // Clamp inside the viewport, clear of the top bar.
         style={{
           transform: `translate(
-                calc(${x * camera.zoom + camera.x}px - 50%),
-                calc(${y * camera.zoom + camera.y}px)
+                clamp(8px, calc(${x * camera.zoom + camera.x}px - 50%), calc(100vw - 100% - 8px)),
+                max(64px, calc(${y * camera.zoom + camera.y}px - 100%))
               )`,
         }}
+        onPointerDown={(e) => e.stopPropagation()}
       >
-        <ColorPicker onChange={setFill} />
+        <Popover>
+          <Hint lablel="Color">
+            <PopoverTrigger asChild>
+              <Button variant="board" size="icon" className={buttonClassName}>
+                <span
+                  className="h-5 w-5 rounded-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.15)]"
+                  style={{
+                    background: selectedFill
+                      ? colorToCss(selectedFill)
+                      : "#000",
+                  }}
+                />
+              </Button>
+            </PopoverTrigger>
+          </Hint>
+          <PopoverContent
+            side="top"
+            sideOffset={10}
+            className="w-auto p-2 rounded-xl border border-neutral-200 shadow-xl"
+          >
+            <ColorPicker value={selectedFill ?? undefined} onChange={setFill} />
+          </PopoverContent>
+        </Popover>
 
-        <div className="flex gap-1.5">
-          <Hint lablel="Bring to front">
+        <div className="w-px h-5 bg-neutral-200 mx-1" />
+
+        <Hint lablel="Bring to front">
+          <Button
+            variant="board"
+            onClick={bringToFront}
+            size="icon"
+            className={buttonClassName}
+          >
+            <BringToFront className="h-4 w-4" />
+          </Button>
+        </Hint>
+        <Hint lablel="Send to back">
+          <Button
+            variant="board"
+            onClick={moveToBack}
+            size="icon"
+            className={buttonClassName}
+          >
+            <SendToBack className="h-4 w-4" />
+          </Button>
+        </Hint>
+        <Hint lablel="Group into section (⌘G)">
+          <Button
+            variant="board"
+            onClick={onGroup}
+            size="icon"
+            className={buttonClassName}
+          >
+            <Group className="h-4 w-4" />
+          </Button>
+        </Hint>
+        {hasSection && (
+          <Hint lablel="Ungroup section (⌘⇧G)">
             <Button
               variant="board"
-              onClick={bringToFront}
+              onClick={onUngroup}
               size="icon"
-              className="h-8 w-8 text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100 transition"
+              className={buttonClassName}
             >
-              <BringToFront className="h-4 w-4" />
+              <Ungroup className="h-4 w-4" />
             </Button>
           </Hint>
+        )}
+        <Hint lablel="Duplicate (⌘D)">
+          <Button
+            variant="board"
+            onClick={onDuplicate}
+            size="icon"
+            className={buttonClassName}
+          >
+            <Copy className="h-4 w-4" />
+          </Button>
+        </Hint>
 
-          <Hint lablel="Send to back">
-            <Button
-              variant="board"
-              onClick={moveToBack}
-              size="icon"
-              className="h-8 w-8 text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100 transition"
-            >
-              <SendToBack className="h-4 w-4" />
-            </Button>
-          </Hint>
-        </div>
+        {tableSize && (
+          <>
+            <div className="w-px h-5 bg-neutral-200 mx-1" />
+            {[
+              { label: "+ Row", hint: "Add row", rows: 1, cols: 0 },
+              { label: "− Row", hint: "Remove last row", rows: -1, cols: 0 },
+              { label: "+ Col", hint: "Add column", rows: 0, cols: 1 },
+              { label: "− Col", hint: "Remove last column", rows: 0, cols: -1 },
+            ].map((action) => (
+              <Hint key={action.label} lablel={action.hint}>
+                <Button
+                  variant="board"
+                  size="sm"
+                  onClick={() => resizeTable(action.rows, action.cols)}
+                  disabled={
+                    (action.rows < 0 && tableSize.rows <= 1) ||
+                    (action.cols < 0 && tableSize.cols <= 1)
+                  }
+                  className="h-8 px-2 rounded-lg text-xs font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100"
+                >
+                  {action.label}
+                </Button>
+              </Hint>
+            ))}
+          </>
+        )}
 
-        <div className="flex items-center pl-3 border-l border-neutral-200">
-          <Hint lablel="Delete">
-            <Button
-              variant="board"
-              size="icon"
-              onClick={deleteLayers}
-              className="h-8 w-8 text-neutral-600 hover:text-neutral-800 hover:bg-red-50 transition"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </Hint>
-        </div>
+        <div className="w-px h-5 bg-neutral-200 mx-1" />
+
+        <Hint lablel="Delete (Del)">
+          <Button
+            variant="board"
+            size="icon"
+            onClick={deleteLayers}
+            className="h-8 w-8 rounded-lg text-neutral-600 hover:text-red-600 hover:bg-red-50 transition"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </Hint>
       </div>
     );
   }

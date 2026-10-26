@@ -35,6 +35,7 @@ const Drafts = () => {
               x={0}
               y={0}
               points={other.pencilDraft}
+              isComplete={false}
               fill={other.penColor ? colorToCss(other.penColor) : "#000"}
             />
           );

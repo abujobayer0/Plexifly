@@ -57,7 +57,7 @@ export const Text = ({
         html={value || "Text"}
         onChange={handleContentChange}
         className={cn(
-          "h-full w-full flex items-center justify-center text-center outline-none",
+          "h-full w-full flex items-center justify-center text-center outline-none select-text",
           "transition-all duration-200",
           "hover:opacity-95",
           "tracking-tight",
