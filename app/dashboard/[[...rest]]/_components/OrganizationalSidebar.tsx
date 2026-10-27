@@ -1,119 +1,99 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Poppins } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
 import { OrganizationSwitcher } from "@clerk/nextjs";
-import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Star } from "lucide-react";
+import { LayoutGrid, LayoutTemplate, Star } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
-const font = Poppins({
-  subsets: ["latin"],
-  weight: ["600"],
-});
+const NAV_ITEMS = [
+  { label: "Team boards", icon: LayoutGrid, href: "/dashboard", favorites: false },
+  {
+    label: "Favorites",
+    icon: Star,
+    href: "/dashboard?favorites=true",
+    favorites: true,
+  },
+];
 
 export const OrganizationalSidebar = () => {
   const searchParams = useSearchParams();
-  const favorites = searchParams.get("favorites");
+  const favorites = Boolean(searchParams.get("favorites"));
 
   return (
-    <div className="hidden lg:flex flex-col space-y-6 w-[280px] pl-5 pt-5 border-r border-purple-100/20">
-      <Link href="/dashboard" className="flex items-center gap-x-2.5 group">
-        <div className="relative">
-          <div className="absolute inset-0 bg-purple-500/20 rounded-lg blur-lg group-hover:bg-purple-500/30 transition-all duration-300" />
-          <Image
-            src="/logo.svg"
-            alt="Logo"
-            priority
-            width={40}
-            height={40}
-            className="relative"
-          />
-        </div>
-        <span
-          className={cn(
-            "font-semibold text-2xl bg-clip-text text-transparent bg-gradient-to-r",
-            "from-gray-900 to-gray-600 group-hover:from-purple-600 group-hover:to-purple-900",
-            "transition-all duration-300",
-            font.className
-          )}
-        >
-          Board
-        </span>
+    <div className="hidden lg:flex w-[260px] shrink-0 flex-col border-r border-zinc-200/80 bg-white px-4 py-5">
+      <Link href="/" className="flex items-center gap-x-2.5 px-2">
+        <Image src="/logo.svg" alt="" priority width={30} height={30} />
+        <span className="text-lg font-bold tracking-tight">Plexifly</span>
       </Link>
 
-      <OrganizationSwitcher
-        hidePersonal
-        appearance={{
-          elements: {
-            rootBox: {
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              width: "100%",
-            },
-            organizationSwitcherTrigger: {
-              padding: "12px",
-              width: "100%",
-              borderRadius: "8px",
-              border: "1px solid #e5e7eb",
-              backgroundColor: "white",
-              transition: "all 0.2s",
-              "&:hover": {
-                borderColor: "#c7d2fe",
-                backgroundColor: "#faf5ff",
+      <div className="mt-6">
+        <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-400">
+          Workspace
+        </p>
+        <OrganizationSwitcher
+          hidePersonal
+          appearance={{
+            elements: {
+              rootBox: {
+                display: "flex",
+                width: "100%",
+              },
+              organizationSwitcherTrigger: {
+                padding: "8px 10px",
+                width: "100%",
+                borderRadius: "12px",
+                border: "1px solid #e4e4e7",
+                backgroundColor: "white",
+                justifyContent: "space-between",
+                boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+                "&:hover": {
+                  backgroundColor: "#fafafa",
+                  borderColor: "#d4d4d8",
+                },
               },
             },
-          },
-        }}
-      />
-
-      <div className="space-y-2 w-full">
-        <Button
-          asChild
-          variant={favorites ? "ghost" : "secondary"}
-          className={cn(
-            "w-full justify-start gap-2 group hover:bg-purple-50 transition-colors duration-200",
-            !favorites && "bg-purple-50 hover:bg-purple-100/80"
-          )}
-          size="lg"
-        >
-          <Link href="/dashboard">
-            <LayoutDashboard className="w-5 h-5 text-purple-600 group-hover:scale-110 transition-transform duration-200" />
-            <span className="font-medium">Team Boards</span>
-          </Link>
-        </Button>
-
-        <Button
-          asChild
-          variant={favorites ? "secondary" : "ghost"}
-          className={cn(
-            "w-full justify-start gap-2 group hover:bg-purple-50 transition-colors duration-200",
-            favorites && "bg-purple-50 hover:bg-purple-100/80"
-          )}
-          size="lg"
-        >
-          <Link href={{ pathname: "/dashboard", query: { favorites: true } }}>
-            <Star className="w-5 h-5 text-purple-600 group-hover:scale-110 transition-transform duration-200" />
-            <span className="font-medium">Favorite Boards</span>
-          </Link>
-        </Button>
+          }}
+        />
       </div>
 
-      <div className="absolute bottom-5  z-10 left-5 flex justify-end right-5">
-        <div className="p-4 rounded-lg bg-purple-50/50 border border-purple-100">
-          <div className="flex items-center gap-x-2">
-            <div className="p-2 rounded-md bg-purple-100">
-              <Star className="w-4 h-4 text-purple-600" />
-            </div>
-            <div className="text-sm">
-              <p className="font-medium text-purple-900">Pro Features</p>
-              <p className="text-purple-600">Upgrade for more features</p>
-            </div>
-          </div>
+      <nav className="mt-6 space-y-1">
+        {NAV_ITEMS.map(({ label, icon: Icon, href, favorites: isFavorites }) => {
+          const isActive = favorites === isFavorites;
+          return (
+            <Link
+              key={label}
+              href={href}
+              aria-current={isActive ? "page" : undefined}
+              className={cn(
+                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                isActive
+                  ? "bg-indigo-50 text-indigo-700"
+                  : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+              )}
+            >
+              <Icon
+                className={cn(
+                  "h-[18px] w-[18px]",
+                  isActive ? "text-indigo-600" : "text-zinc-400"
+                )}
+              />
+              {label}
+            </Link>
+          );
+        })}
+      </nav>
+
+      <div className="mt-auto rounded-2xl border border-zinc-200/80 bg-gradient-to-b from-zinc-50 to-white p-4">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 ring-1 ring-inset ring-indigo-100">
+          <LayoutTemplate className="h-4 w-4" />
         </div>
+        <p className="mt-3 text-sm font-semibold">Start from a template</p>
+        <p className="mt-1 text-[13px] leading-relaxed text-zinc-500">
+          Open any board and pick Kanban, Roadmap, Flowchart and more from the
+          toolbar.
+        </p>
       </div>
     </div>
   );

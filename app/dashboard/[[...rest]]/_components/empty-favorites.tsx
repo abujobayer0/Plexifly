@@ -1,19 +1,12 @@
-import Image from "next/image";
 import React from "react";
+import { EmptyState } from "./empty-state";
 
 export const EmptyFavorites = () => {
   return (
-    <div className="h-full flex flex-col pt-32 items-center justify-center">
-      <Image
-        src={"/empty-favorites.svg"}
-        alt="favorite"
-        width={140}
-        height={140}
-      />
-      <h2 className="text-2xl font-semibold mt-6">No favorites boards!</h2>
-      <p className="text-muted-foreground text-sm mt-2">
-        Try favoriting a board
-      </p>
-    </div>
+    <EmptyState
+      image="/empty-favorites.svg"
+      title="No favorite boards yet"
+      description="Star a board from its card to keep it one click away here."
+    />
   );
 };

@@ -25,22 +25,31 @@ export default function Footer({
     onClick();
   };
   return (
-    <div className="relative bg-white p-3">
-      <p className="text-[13px] truncate max-w-[calc(100%-20px)]">{title}</p>
-      <p className="opacity-0 group-hover:opacity-100 transition-opacity text-[11px] text-muted-foreground truncate">
-        {authorLabel}, {createdAtLabel}
-      </p>
+    <div className="flex items-start gap-3 border-t border-zinc-100 p-4">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-xs font-bold uppercase text-indigo-600 ring-1 ring-inset ring-indigo-100">
+        {authorLabel.charAt(0)}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold text-zinc-900">{title}</p>
+        <p className="mt-0.5 truncate text-xs text-zinc-500">
+          {authorLabel} · {createdAtLabel}
+        </p>
+      </div>
       <button
+        type="button"
         disabled={disabled}
         onClick={handleClick}
+        aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+        aria-pressed={isFavorite}
         className={cn(
-          "opacity-0 group-hover:opacity-100 transition absolute top-3 right-3 text-muted-foreground hover:text-blue-600",
-          disabled && "cursor-not-allowed opacity-75"
+          "-mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all hover:bg-zinc-100",
+          isFavorite
+            ? "text-amber-500"
+            : "text-zinc-400 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:text-zinc-700",
+          disabled && "cursor-not-allowed opacity-60"
         )}
       >
-        <Star
-          className={cn("h-4 w-4", isFavorite && "fill-blue-600 text-blue-600")}
-        />
+        <Star className={cn("h-4 w-4", isFavorite && "fill-amber-400")} />
       </button>
     </div>
   );

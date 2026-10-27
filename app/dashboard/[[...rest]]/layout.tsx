@@ -12,15 +12,13 @@ const DashboardLayout = ({ children }: Props) => {
   return (
     <>
       <Authenticated>
-        <main className="h-screen">
-          <Sidebar></Sidebar>
-          <div className="pl-[60px] h-full">
-            <div className="flex gap-x-3 h-full">
-              <OrganizationalSidebar></OrganizationalSidebar>
-              <div className="h-full flex-1">
-                <Navbar />
-                {children}
-              </div>
+        <main className="flex h-screen bg-white text-zinc-900 [font-family:var(--font-jakarta)]">
+          <Sidebar />
+          <OrganizationalSidebar />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <Navbar />
+            <div className="flex-1 overflow-y-auto bg-zinc-50/60">
+              {children}
             </div>
           </div>
         </main>

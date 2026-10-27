@@ -1,29 +1,29 @@
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateOrganization } from "@clerk/nextjs";
-import Image from "next/image";
+import { Building2 } from "lucide-react";
 import React from "react";
+import { EmptyState, primaryButtonClassName } from "./empty-state";
 
 export const EmptyOrg = () => {
   return (
-    <div className="h-full flex flex-col pt-32 items-center justify-center">
-      <Image src={"/elements.svg"} alt="empty" height={200} width={200} />
-      <h2 className="text-2xl font-semibold mt-6">Welcome to board</h2>
-      <p className="text-muted-foreground text-sm mt-2">
-        Create an organizatoin to get started
-      </p>
-      <div className="mt-6 ">
+    <EmptyState
+      image="/elements.svg"
+      title="Welcome to Plexifly"
+      description="Create an organization to get started. Boards live in organizations, so everyone you invite can collaborate on them."
+      action={
         <Dialog>
           <DialogTrigger asChild>
-            <span>
-              <Button size="lg">Create organization</Button>
-            </span>
+            <button type="button" className={primaryButtonClassName}>
+              <Building2 className="h-4 w-4" />
+              Create organization
+            </button>
           </DialogTrigger>
           <DialogContent className="p-0 bg-transparent border-none max-w-[420px]">
+            <DialogTitle className="sr-only">Create organization</DialogTitle>
             <CreateOrganization />
           </DialogContent>
         </Dialog>
-      </div>
-    </div>
+      }
+    />
   );
 };

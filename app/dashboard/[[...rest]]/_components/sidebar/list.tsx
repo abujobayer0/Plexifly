@@ -8,7 +8,7 @@ export const List = () => {
 
   if (!userMemberships.data?.length) return null;
   return (
-    <ul className="space-y-4">
+    <ul className="flex flex-col items-center gap-y-3">
       {userMemberships.data.map((membership) => (
         <Item
           name={membership.organization.name}

@@ -16,7 +16,7 @@ export default function NewBoardButton({ orgId, disabled }: Props) {
   const onClick = () => {
     mutate({
       orgId,
-      title: "untitled",
+      title: "Untitled board",
     })
       .then((id) => {
         toast.success("Board created successfully");
@@ -27,17 +27,27 @@ export default function NewBoardButton({ orgId, disabled }: Props) {
 
   return (
     <button
+      type="button"
       disabled={pending || disabled}
       onClick={onClick}
       className={cn(
-        "col-span-1 aspect-[100/127] bg-[#8c52ff] rounded-lg hover:bg-[#5e17eb] flex flex-col items-center justify-center py-6",
+        "group flex min-h-[240px] h-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-zinc-200 bg-white/60 p-6 text-center transition-all",
+        "hover:border-indigo-300 hover:bg-indigo-50/50",
         (pending || disabled) &&
-          "opacity-75  hover:bg-[#8c52ff] cursor-not-allowed "
+          "cursor-not-allowed opacity-60 hover:border-zinc-200 hover:bg-white/60"
       )}
     >
-      <div />
-      <Plus className="h-12 w-12 text-white stroke-1" />
-      <p className="text-sm text-white font-light">New Board</p>
+      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-600/25 transition-transform group-hover:scale-105">
+        <Plus className="h-6 w-6" />
+      </span>
+      <span>
+        <span className="block text-sm font-semibold text-zinc-900">
+          {pending ? "Creating…" : "New board"}
+        </span>
+        <span className="mt-0.5 block text-xs text-zinc-500">
+          Start from scratch or a template
+        </span>
+      </span>
     </button>
   );
 }

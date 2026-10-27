@@ -8,30 +8,23 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Hint } from "@/components/hint";
-import { Button } from "@/components/ui/button";
 
 export const NewButton = () => {
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <div className="aspect-square">
-          <Button
-            variant="ghost"
-            className="bg-white/25 cursor-pointer h-full w-full rounded-md flex items-center justify-center opacity-60 hover:opacity-100 transition"
+      <Hint lablel="Create organization" side="right" sideOffset={12}>
+        <DialogTrigger asChild>
+          <button
+            type="button"
+            aria-label="Create organization"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-dashed border-zinc-300 text-zinc-500 transition-colors hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-600"
           >
-            <Hint
-              lablel="Create Organization"
-              alignOffset={18}
-              side="right"
-              align="start"
-            >
-              <Plus className="text-white" />
-            </Hint>
-          </Button>
-        </div>
-      </DialogTrigger>
+            <Plus className="h-5 w-5" />
+          </button>
+        </DialogTrigger>
+      </Hint>
       <DialogContent className="p-0 bg-transparent border-none max-w-[420px]">
-        <DialogTitle>Create Organization</DialogTitle>
+        <DialogTitle className="sr-only">Create organization</DialogTitle>
         <CreateOrganization />
       </DialogContent>
     </Dialog>

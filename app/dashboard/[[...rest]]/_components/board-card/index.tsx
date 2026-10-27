@@ -2,7 +2,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
-import Overlay from "./overlay";
 import { useAuth } from "@clerk/nextjs";
 import { formatDistanceToNow } from "date-fns";
 import Footer from "./footer";
@@ -54,40 +53,53 @@ export const BoardCard = ({
   };
 
   return (
-    <Link href={`/board/${id}`}>
-      <div className="group aspect-[100/127] border rounded-lg flex flex-col justify-between overflow-hidden">
-        <div className="relative flex-1 bg-purple-50">
-          <Image
-            src={imageUrl}
-            alt={title}
-            priority
-            fill
-            className="object-fit"
-          />
-          <Overlay />
-          <Actions id={id} side="right" title={title}>
-            <button className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity px-3 py-2 outline-none">
-              <MoreHorizontal className="text-white opacity-75 hover:opacity-100 transition-opacity" />
-            </button>
-          </Actions>
-        </div>
-        <Footer
-          title={title}
-          authorLabel={authorLabel}
-          createdAtLabel={createdAtLabel}
-          onClick={toggleFavorite}
-          disabled={favoritePending || unfavoritePending}
-          isFavorite={isFavorite}
+    <Link
+      href={`/board/${id}`}
+      className="group flex flex-col overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-sm outline-none transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-[0_12px_32px_-12px_rgba(15,23,42,0.18)] focus-visible:ring-2 focus-visible:ring-indigo-400"
+    >
+      <div className="relative aspect-[16/10] bg-[#f8f9fb] bg-[radial-gradient(rgba(0,0,0,0.07)_1px,transparent_1px)] [background-size:14px_14px]">
+        <Image
+          src={imageUrl}
+          alt=""
+          fill
+          sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
+          className="object-contain p-6 transition-transform duration-300 group-hover:scale-[1.04]"
         />
+        <Actions id={id} side="right" title={title}>
+          <button
+            type="button"
+            aria-label="Board actions"
+            onClick={(e) => {
+              // Keep the card link from navigating when opening the menu.
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            className="absolute top-2.5 right-2.5 flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200/80 bg-white/90 text-zinc-600 opacity-0 shadow-sm backdrop-blur transition-opacity hover:text-zinc-900 focus-visible:opacity-100 group-hover:opacity-100 data-[state=open]:opacity-100"
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </button>
+        </Actions>
       </div>
+      <Footer
+        title={title}
+        authorLabel={authorLabel}
+        createdAtLabel={createdAtLabel}
+        onClick={toggleFavorite}
+        disabled={favoritePending || unfavoritePending}
+        isFavorite={isFavorite}
+      />
     </Link>
   );
 };
 
 BoardCard.Skeleton = function BoardCardSkeleton() {
   return (
-    <div className="aspect-[100/127] rounded-lg overflow-hidden">
-      <Skeleton className="h-full" />
+    <div className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white">
+      <Skeleton className="aspect-[16/10] rounded-none" />
+      <div className="space-y-2 p-4">
+        <Skeleton className="h-4 w-2/3" />
+        <Skeleton className="h-3 w-1/3" />
+      </div>
     </div>
   );
 };

@@ -12,27 +12,25 @@ export const Navbar = () => {
   const { organization } = useOrganization();
 
   return (
-    <div className="flex items-center gap-x-4 p-5 ">
-      <div className="hidden lg:flex lg:flex-1 ">
+    <header className="flex h-16 shrink-0 items-center gap-x-3 border-b border-zinc-200/80 bg-white/80 px-4 sm:px-6 backdrop-blur">
+      <div className="hidden lg:flex lg:flex-1">
         <SearchInput />
       </div>
-      <div className="block lg:hidden flex-1">
+      <div className="flex-1 lg:hidden">
         <OrganizationSwitcher
           hidePersonal
           appearance={{
             elements: {
               rootBox: {
                 display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
                 width: "100%",
-                maxWidth: "376px",
+                maxWidth: "320px",
               },
               organizationSwitcherTrigger: {
-                padding: "6px",
+                padding: "6px 10px",
                 width: "100%",
-                borderRadius: "8px",
-                border: "1px solid #e5e7eb",
+                borderRadius: "12px",
+                border: "1px solid #e4e4e7",
                 justifyContent: "space-between",
                 backgroundColor: "white",
               },
@@ -41,7 +39,11 @@ export const Navbar = () => {
         />
       </div>
       {organization && <InviteButton />}
-      <UserButton />
-    </div>
+      <div className="flex h-9 w-9 items-center justify-center">
+        <UserButton
+          appearance={{ elements: { avatarBox: { width: 32, height: 32 } } }}
+        />
+      </div>
+    </header>
   );
 };

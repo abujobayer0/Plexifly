@@ -10,7 +10,16 @@ import { EmptySearch } from "./empty-search";
 import { BoardCard } from "./board-card";
 import NewBoardButton from "./new-board-button";
 
-export const BoardList = ({ orgId }: { orgId: string }) => {
+const GRID_CLASS_NAME =
+  "mt-6 grid grid-cols-1 gap-5 pb-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5";
+
+export const BoardList = ({
+  orgId,
+  orgName,
+}: {
+  orgId: string;
+  orgName: string;
+}) => {
   const searchParams = useSearchParams();
 
   const [query, setQuery] = useState<{ search?: string; favorites?: string }>({
@@ -27,39 +36,63 @@ export const BoardList = ({ orgId }: { orgId: string }) => {
 
   const data = useQuery(api.boards.get, { orgId, ...query });
 
+  const title = query.search
+    ? "Search results"
+    : query.favorites
+      ? "Favorite boards"
+      : "Team boards";
+
+  let subtitle: string;
+  if (data === undefined) {
+    subtitle = "Loading boards…";
+  } else if (query.search) {
+    subtitle = `${data.length} ${data.length === 1 ? "board matches" : "boards match"} “${query.search}” in ${orgName}`;
+  } else if (query.favorites) {
+    subtitle = `Boards you've starred in ${orgName}`;
+  } else {
+    subtitle = `${data.length} ${data.length === 1 ? "board" : "boards"} in ${orgName}`;
+  }
+
+  const header = (
+    <div>
+      <h1 className="text-2xl font-extrabold tracking-[-0.02em]">{title}</h1>
+      <p className="mt-1 text-sm text-zinc-500">{subtitle}</p>
+    </div>
+  );
+
   if (data === undefined) {
     return (
       <div>
-        <h2 className="text-3xl">
-          {query.favorites ? "Favorite boards" : "Team boards"}
-        </h2>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-5 mt-8 pb-10">
+        {header}
+        <div className={GRID_CLASS_NAME}>
           <NewBoardButton orgId={orgId} disabled />
-          <BoardCard.Skeleton />
-          <BoardCard.Skeleton />
-          <BoardCard.Skeleton />
-          <BoardCard.Skeleton />
-          <BoardCard.Skeleton />
-          <BoardCard.Skeleton />
-          <BoardCard.Skeleton />
+          {Array.from({ length: 7 }).map((_, index) => (
+            <BoardCard.Skeleton key={index} />
+          ))}
         </div>
       </div>
     );
   }
 
-  if (!data?.length && query.search) return <EmptySearch />;
-  if (!data?.length && query.favorites) return <EmptyFavorites />;
-  if (!data?.length) return <EmptyBoards />;
+  let emptyState: React.ReactNode = null;
+  if (!data.length && query.search) emptyState = <EmptySearch />;
+  else if (!data.length && query.favorites) emptyState = <EmptyFavorites />;
+  else if (!data.length) emptyState = <EmptyBoards />;
+
+  if (emptyState) {
+    return (
+      <div>
+        {header}
+        <div className="mt-6">{emptyState}</div>
+      </div>
+    );
+  }
 
   return (
     <div>
-      <h2 className="text-3xl">
-        {query.favorites ? "Favorite boards" : "Team boards"}
-      </h2>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-5 mt-8 pb-10">
-        <NewBoardButton orgId={orgId} />
+      {header}
+      <div className={GRID_CLASS_NAME}>
+        {!query.search && !query.favorites && <NewBoardButton orgId={orgId} />}
         {data.map((board) => (
           <BoardCard
             key={board._id}

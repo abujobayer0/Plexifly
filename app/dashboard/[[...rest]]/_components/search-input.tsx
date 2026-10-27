@@ -29,11 +29,12 @@ const SearchInput = () => {
   };
 
   return (
-    <div className="w-full relative">
-      <Search className="absolute top-1/2 left-3 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+    <div className="relative w-full max-w-[460px]">
+      <Search className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-zinc-400 h-4 w-4" />
       <Input
-        className="w-full max-w-[516px] pl-9"
-        placeholder="Search Boards"
+        className="h-10 w-full rounded-xl border-transparent bg-zinc-100 pl-10 text-sm shadow-none transition-colors placeholder:text-zinc-400 hover:bg-zinc-200/60 focus-visible:border-indigo-300 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-indigo-100"
+        placeholder="Search boards…"
+        aria-label="Search boards"
         onChange={handleChange}
         value={value}
       />
