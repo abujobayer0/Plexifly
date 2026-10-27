@@ -40,6 +40,7 @@ import { CursorsPresence } from "./cursors-presence";
 import {
   colorToCss,
   connectionIdToColor,
+  findFreeSpot,
   findIntersectingLayersWithRectangle,
   penPointToPathLayer,
   pointerEventToCanvasPoint,
@@ -63,6 +64,7 @@ import {
   isLineLayer,
   lineBoundsFromEndpoints,
   routeConnector,
+  tableRowAt,
   updateConnectors,
 } from "@/lib/connectors";
 import { shallow } from "@liveblocks/client";
@@ -110,6 +112,15 @@ const TABLE_DEFAULT_CELLS = [
 
 const isGrayscale = (color: Color) => color.r === color.g && color.g === color.b;
 
+// The starting ink color (also the first swatch).
+const DEFAULT_COLOR: Color = { r: 30, g: 30, b: 30 };
+const isDefaultColor = (color: Color) =>
+  color.r === DEFAULT_COLOR.r &&
+  color.g === DEFAULT_COLOR.g &&
+  color.b === DEFAULT_COLOR.b;
+const LIGHT_NEUTRAL: Color = { r: 246, g: 246, b: 247 };
+const SLATE: Color = { r: 100, g: 116, b: 139 };
+
 // Builds a new layer of the given type filling `bounds`.
 function createLayer(
   layerType: InsertableLayerType,
@@ -142,8 +153,22 @@ function createLayer(
         fill: isGrayscale(fill) ? TEMPLATE_COLORS.gray : fill,
         value: "Section",
       };
-    default:
+    case LayerType.Ellipse:
+      return {
+        type: layerType,
+        ...bounds,
+        fill: isDefaultColor(fill) ? SLATE : fill,
+      };
+    case LayerType.Text:
       return { type: layerType, ...bounds, fill };
+    default:
+      // With the default ink color, shapes start as a clean light neutral
+      // (gray border, dark text) instead of a heavy near-black block.
+      return {
+        type: layerType,
+        ...bounds,
+        fill: isDefaultColor(fill) ? LIGHT_NEUTRAL : fill,
+      };
   }
 }
 
@@ -167,6 +192,25 @@ const TOOL_SHORTCUTS: Record<string, CanvasState> = {
 const isLineType = (type: InsertableLayerType) =>
   type === LayerType.Line || type === LayerType.Arrow;
 
+// Bounding box around a set of layers.
+function boundsOf(layers: readonly XYWH[]): XYWH {
+  const left = Math.min(...layers.map((l) => l.x));
+  const top = Math.min(...layers.map((l) => l.y));
+  const right = Math.max(...layers.map((l) => l.x + l.width));
+  const bottom = Math.max(...layers.map((l) => l.y + l.height));
+  return { x: left, y: top, width: right - left, height: bottom - top };
+}
+
+// Bounds of every layer already on the board, for finding free space.
+const occupiedBounds = (liveLayers: LiveMap<string, LiveObject<Layer>>) => {
+  const bounds: XYWH[] = [];
+  liveLayers.forEach((layer) => {
+    const { x, y, width, height } = layer.toImmutable();
+    bounds.push({ x, y, width, height });
+  });
+  return bounds;
+};
+
 // Id of the top layer under a screen point, if any.
 const layerIdAtPoint = (clientX: number, clientY: number) =>
   document
@@ -177,7 +221,7 @@ const layerIdAtPoint = (clientX: number, clientY: number) =>
 const withoutAttachments = (layer: Layer): Layer => {
   if (!isLineLayer(layer)) return layer;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { startId, endId, ...rest } = layer;
+  const { startId, endId, startRow, endRow, ...rest } = layer;
   return rest;
 };
 
@@ -186,14 +230,19 @@ const detachConnector = (layer: LiveObject<Layer>) => {
   const line = layer as unknown as LiveObject<LineLayer>;
   line.delete("startId");
   line.delete("endId");
+  line.delete("startRow");
+  line.delete("endRow");
+  line.delete("waypoints");
 };
 
 // Moves layers by offset, re-routes connectors attached to them, and
-// detaches moved connectors from shapes that stayed put.
+// detaches moved connectors from shapes that stayed put. `avoid` is off
+// during a drag (quick elbows); the full route runs when the drag ends.
 function moveLayers(
   liveLayers: LiveMap<string, LiveObject<Layer>>,
   ids: readonly string[],
-  offset: Point
+  offset: Point,
+  avoid = true
 ) {
   const moved = new Set(ids);
   for (const id of ids) {
@@ -206,11 +255,17 @@ function moveLayers(
     const value = layer.toImmutable();
     if (isLineLayer(value)) {
       const line = layer as unknown as LiveObject<LineLayer>;
-      if (value.startId && !moved.has(value.startId)) line.delete("startId");
-      if (value.endId && !moved.has(value.endId)) line.delete("endId");
+      if (value.startId && !moved.has(value.startId)) {
+        line.delete("startId");
+        line.delete("startRow");
+      }
+      if (value.endId && !moved.has(value.endId)) {
+        line.delete("endId");
+        line.delete("endRow");
+      }
     }
   }
-  updateConnectors(liveLayers, moved);
+  updateConnectors(liveLayers, moved, { avoid });
 }
 
 const clampZoom = (zoom: number) =>
@@ -258,7 +313,6 @@ export default function Canvas({ boardId }: CanvasProps) {
   const [isDraggingFile, setIsDraggingFile] = useState(false);
   // Last pointer position over the canvas, where pasted images land.
   const lastPointerScreenRef = useRef<Point | null>(null);
-  const pasteCountRef = useRef(0);
 
   useDisableScrollBounce();
   const history = useHistory();
@@ -312,11 +366,16 @@ export default function Canvas({ boardId }: CanvasProps) {
         if (startLayer || endLayer) {
           const { start, end } = getLineEndpoints(layer);
           const routed = routeConnector(start, end, startLayer, endLayer);
+          const startRow = startLayer && tableRowAt(startLayer, origin.y);
+          const endRow = endLayer && tableRowAt(endLayer, current.y);
           layer = {
             ...layer,
             ...lineBoundsFromEndpoints(routed.start, routed.end),
+            elbow: routed.elbow,
             ...(startLayer && { startId: connector.startId! }),
             ...(endLayer && { endId: connector.endId! }),
+            ...(startRow != null && { startRow }),
+            ...(endRow != null && { endRow }),
           };
         }
       }
@@ -328,6 +387,10 @@ export default function Canvas({ boardId }: CanvasProps) {
         storage.get("layerIds").insert(layerId, 0);
       } else {
         storage.get("layerIds").push(layerId);
+      }
+      if (isLineLayer(layer) && (layer.startId || layer.endId)) {
+        // Spread it among the other arrows on the same sides.
+        updateConnectors(liveLayers, new Set([layerId]));
       }
       setMyPresence({ selection: [layerId] }, { addToHistory: true });
       setCanvasState({ mode: CanvasMode.None });
@@ -346,7 +409,7 @@ export default function Canvas({ boardId }: CanvasProps) {
         x: point.x - last.x,
         y: point.y - last.y,
       };
-      moveLayers(storage.get("layers"), translateIdsRef.current, offset);
+      moveLayers(storage.get("layers"), translateIdsRef.current, offset, false);
       translateLastPointRef.current = point;
     },
     [canvasState.mode]
@@ -445,36 +508,79 @@ export default function Canvas({ boardId }: CanvasProps) {
     clipboardRef.current = self.presence.selection
       .map((id) => liveLayers.get(id)?.toImmutable())
       .filter((layer): layer is Layer => layer != null);
-    pasteCountRef.current = 0;
   }, []);
 
-  // Inserts copies of the given layers shifted by offset and selects them.
+  // Pans (and if needed zooms out) so canvas-space `bounds` is fully visible.
+  const revealBounds = useCallback((bounds: XYWH) => {
+    setCamera((camera) => {
+      const margin = 80;
+      const screenLeft = bounds.x * camera.zoom + camera.x;
+      const screenTop = bounds.y * camera.zoom + camera.y;
+      const isVisible =
+        screenLeft >= margin &&
+        screenTop >= margin &&
+        screenLeft + bounds.width * camera.zoom <= window.innerWidth - margin &&
+        screenTop + bounds.height * camera.zoom <= window.innerHeight - margin;
+      if (isVisible) return camera;
+
+      const zoom = clampZoom(
+        Math.min(
+          camera.zoom,
+          (window.innerWidth - margin * 2) / Math.max(bounds.width, 1),
+          (window.innerHeight - margin * 2) / Math.max(bounds.height, 1)
+        )
+      );
+      return {
+        zoom,
+        x: window.innerWidth / 2 - (bounds.x + bounds.width / 2) * zoom,
+        y: window.innerHeight / 2 - (bounds.y + bounds.height / 2) * zoom,
+      };
+    });
+  }, []);
+
+  // Inserts copies of the given layers in the nearest free space next to
+  // where they came from, selects them and brings them into view.
   const insertLayerCopies = useMutation(
-    ({ storage, setMyPresence }, layers: Layer[], offset: number) => {
+    ({ storage, setMyPresence }, layers: Layer[]) => {
+      if (layers.length === 0) return;
       const liveLayers = storage.get("layers");
       const liveLayerIds = storage.get("layerIds");
+
+      const source = boundsOf(layers);
+      const spot = findFreeSpot(occupiedBounds(liveLayers), source, {
+        x: source.x + source.width / 2,
+        y: source.y + source.height / 2,
+      });
+      const dx = spot.x - source.x;
+      const dy = spot.y - source.y;
+
       const newIds: string[] = [];
+      let frameIndex = 0;
       for (const layer of layers) {
         if (liveLayers.size >= MAX_LAYERS) break;
         const id = nanoid();
         liveLayers.set(
           id,
           new LiveObject(
-            structuredClone(withoutAttachments({
-              ...layer,
-              x: layer.x + offset,
-              y: layer.y + offset,
-            }))
+            structuredClone(
+              withoutAttachments({ ...layer, x: layer.x + dx, y: layer.y + dy })
+            )
           )
         );
-        liveLayerIds.push(id);
+        // Sections stay beneath the content they group.
+        if (layer.type === LayerType.Frame) {
+          liveLayerIds.insert(id, frameIndex++);
+        } else {
+          liveLayerIds.push(id);
+        }
         newIds.push(id);
       }
       if (newIds.length > 0) {
         setMyPresence({ selection: newIds }, { addToHistory: true });
+        revealBounds({ ...source, x: spot.x, y: spot.y });
       }
     },
-    []
+    [revealBounds]
   );
 
   const duplicateSelectedLayers = useMutation(
@@ -483,18 +589,76 @@ export default function Canvas({ boardId }: CanvasProps) {
       const layers = self.presence.selection
         .map((id) => liveLayers.get(id)?.toImmutable())
         .filter((layer): layer is Layer => layer != null);
-      insertLayerCopies(layers, PASTE_OFFSET);
+      insertLayerCopies(layers);
     },
     [insertLayerCopies]
   );
 
   const pasteLayers = useCallback(() => {
     if (clipboardRef.current.length === 0) return;
-    pasteCountRef.current += 1;
-    insertLayerCopies(clipboardRef.current, PASTE_OFFSET * pasteCountRef.current);
+    insertLayerCopies(clipboardRef.current);
   }, [insertLayerCopies]);
 
-  // Adds a template's layers centered in the current viewport.
+  // Creates an arrow dragged out of an item's connect handle. It attaches to
+  // the item under the pointer (and the row under it, for tables), or ends
+  // at the pointer on empty canvas. The source stays selected so more
+  // arrows can be pulled out of it.
+  const insertConnector = useMutation(
+    (
+      { storage },
+      fromId: string,
+      fromRow: number | undefined,
+      toId: string | null,
+      origin: Point,
+      point: Point
+    ) => {
+      const liveLayers = storage.get("layers");
+      if (liveLayers.size >= MAX_LAYERS) return;
+      const from = liveLayers.get(fromId)?.toImmutable();
+      if (!from) return;
+      const candidate = toId && toId !== fromId ? liveLayers.get(toId)?.toImmutable() : undefined;
+      const to = candidate && isConnectable(candidate) ? candidate : undefined;
+      if (!to && Math.hypot(point.x - origin.x, point.y - origin.y) < 12) return;
+
+      const toRow = to ? tableRowAt(to, point.y) : undefined;
+      const start = { x: from.x + from.width / 2, y: from.y + from.height / 2 };
+      const end = to ? { x: to.x + to.width / 2, y: to.y + to.height / 2 } : point;
+      const id = nanoid();
+      liveLayers.set(
+        id,
+        new LiveObject<Layer>({
+          type: LayerType.Arrow,
+          ...lineBoundsFromEndpoints(start, end),
+          fill: { r: 100, g: 116, b: 139 },
+          startId: fromId,
+          ...(fromRow != null && { startRow: fromRow }),
+          ...(to && { endId: toId! }),
+          ...(toRow != null && { endRow: toRow }),
+        })
+      );
+      storage.get("layerIds").push(id);
+      updateConnectors(liveLayers, new Set([id]));
+    },
+    []
+  );
+
+  const onConnectStart = useCallback(
+    (fromId: string, fromRow: number | undefined, e: React.PointerEvent) => {
+      e.stopPropagation();
+      svgRef.current?.setPointerCapture(e.pointerId);
+      const point = pointerEventToCanvasPoint(e, camera);
+      setCanvasState({
+        mode: CanvasMode.Connecting,
+        fromId,
+        fromRow,
+        origin: point,
+        current: point,
+      });
+    },
+    [camera]
+  );
+
+  // Adds a template's layers in the free space nearest the viewport center.
   const insertTemplate = useMutation(
     ({ storage, setMyPresence }, templateId: string) => {
       const template = BOARD_TEMPLATES.find((t) => t.id === templateId);
@@ -503,16 +667,14 @@ export default function Canvas({ boardId }: CanvasProps) {
       const liveLayers = storage.get("layers");
       if (liveLayers.size + layers.length > MAX_LAYERS) return;
 
-      const left = Math.min(...layers.map((l) => l.x));
-      const top = Math.min(...layers.map((l) => l.y));
-      const right = Math.max(...layers.map((l) => l.x + l.width));
-      const bottom = Math.max(...layers.map((l) => l.y + l.height));
+      const source = boundsOf(layers);
       const center = {
         x: (window.innerWidth / 2 - camera.x) / camera.zoom,
         y: (window.innerHeight / 2 - camera.y) / camera.zoom,
       };
-      const dx = center.x - (left + right) / 2;
-      const dy = center.y - (top + bottom) / 2;
+      const spot = findFreeSpot(occupiedBounds(liveLayers), source, center, 60);
+      const dx = spot.x - source.x;
+      const dy = spot.y - source.y;
 
       const liveLayerIds = storage.get("layerIds");
       const ids: string[] = [];
@@ -532,8 +694,9 @@ export default function Canvas({ boardId }: CanvasProps) {
       }
       setMyPresence({ selection: ids }, { addToHistory: true });
       setCanvasState({ mode: CanvasMode.None });
+      revealBounds({ ...source, x: spot.x, y: spot.y });
     },
-    [camera]
+    [camera, revealBounds]
   );
 
   const insertImage = useMutation(
@@ -541,17 +704,22 @@ export default function Canvas({ boardId }: CanvasProps) {
       { storage, setMyPresence },
       src: string,
       center: Point,
-      size: { width: number; height: number }
+      size: { width: number; height: number },
+      avoidOverlap: boolean
     ) => {
       const liveLayers = storage.get("layers");
       if (liveLayers.size >= MAX_LAYERS) return;
+      // Dropped images land exactly where dropped; pasted ones find free space.
+      const position = avoidOverlap
+        ? findFreeSpot(occupiedBounds(liveLayers), size, center)
+        : { x: center.x - size.width / 2, y: center.y - size.height / 2 };
       const id = nanoid();
       liveLayers.set(
         id,
         new LiveObject<Layer>({
           type: LayerType.Image,
-          x: center.x - size.width / 2,
-          y: center.y - size.height / 2,
+          x: position.x,
+          y: position.y,
           width: size.width,
           height: size.height,
           fill: TEMPLATE_COLORS.gray,
@@ -561,15 +729,16 @@ export default function Canvas({ boardId }: CanvasProps) {
       storage.get("layerIds").push(id);
       setMyPresence({ selection: [id] }, { addToHistory: true });
       setCanvasState({ mode: CanvasMode.None });
+      if (avoidOverlap) revealBounds({ ...position, ...size });
     },
-    []
+    [revealBounds]
   );
 
   const uploadImage = useImageUpload();
 
   // Uploads image files and places them around a screen point.
   const addImageFiles = useCallback(
-    (files: File[], screenPoint: Point) => {
+    (files: File[], screenPoint: Point, avoidOverlap: boolean) => {
       const images = files.filter((file) => file.type.startsWith("image/"));
       images.forEach((file, index) => {
         if (file.size > MAX_IMAGE_BYTES) {
@@ -590,10 +759,15 @@ export default function Canvas({ boardId }: CanvasProps) {
             1,
             MAX_IMAGE_SIZE / Math.max(natural.width, natural.height, 1)
           );
-          insertImage(src, center, {
-            width: Math.max(natural.width * scale, 24),
-            height: Math.max(natural.height * scale, 24),
-          });
+          insertImage(
+            src,
+            center,
+            {
+              width: Math.max(natural.width * scale, 24),
+              height: Math.max(natural.height * scale, 24),
+            },
+            avoidOverlap
+          );
         };
         toast.promise(upload(), {
           loading: "Uploading image…",
@@ -762,13 +936,19 @@ export default function Canvas({ boardId }: CanvasProps) {
           // A manually reshaped connector no longer follows its shapes.
           detachConnector(layer);
         } else {
-          updateConnectors(liveLayers, new Set([id]));
+          updateConnectors(liveLayers, new Set([id]), { avoid: false });
         }
       }
     },
 
     [canvasState]
   );
+
+  // Runs the full obstacle-avoiding route for connectors on these layers
+  // (after a drag or resize, which only draws quick elbows meanwhile).
+  const rerouteConnectors = useMutation(({ storage }, ids: string[]) => {
+    if (ids.length) updateConnectors(storage.get("layers"), new Set(ids));
+  }, []);
 
   const onResizeHandlePointerDown = useCallback(
     (corner: Side, initialBounds: XYWH) => {
@@ -939,9 +1119,17 @@ export default function Canvas({ boardId }: CanvasProps) {
         (canvasState.mode === CanvasMode.Pressing ||
           canvasState.mode === CanvasMode.SelectionNet ||
           canvasState.mode === CanvasMode.Translating ||
-          canvasState.mode === CanvasMode.Resizing)
+          canvasState.mode === CanvasMode.Resizing ||
+          canvasState.mode === CanvasMode.Connecting)
       ) {
+        setConnectorHoverId(null);
         translateLastPointRef.current = null;
+        if (
+          canvasState.mode === CanvasMode.Translating ||
+          canvasState.mode === CanvasMode.Resizing
+        ) {
+          rerouteConnectors(translateIdsRef.current);
+        }
         setCanvasState({ mode: CanvasMode.None });
         history.resume();
         setMyPresence({ cursor: current });
@@ -967,6 +1155,11 @@ export default function Canvas({ boardId }: CanvasProps) {
         resizeSelectedLayer(current);
       } else if (canvasState.mode === CanvasMode.Pencil) {
         continueDrawing(current, e);
+      } else if (canvasState.mode === CanvasMode.Connecting) {
+        setCanvasState({ ...canvasState, current });
+        const hoverId = layerIdAtPoint(e.clientX, e.clientY);
+        const target = hoverId !== canvasState.fromId ? hoverId : null;
+        if (target !== connectorHoverId) setConnectorHoverId(target);
       } else if (canvasState.mode === CanvasMode.Inserting) {
         if (canvasState.origin != null) {
           setCanvasState({ ...canvasState, current });
@@ -1002,6 +1195,7 @@ export default function Canvas({ boardId }: CanvasProps) {
       history,
       eraseAlong,
       connectorHoverId,
+      rerouteConnectors,
     ]
   );
 
@@ -1050,9 +1244,17 @@ export default function Canvas({ boardId }: CanvasProps) {
   );
 
   const onPointerUp = useMutation(
-    (_, e: React.PointerEvent) => {
+    ({ self }, e: React.PointerEvent) => {
       const point = pointerEventToCanvasPoint(e, camera);
       translateLastPointRef.current = null;
+
+      // Finish connector routes after a drag or resize, inside the same
+      // undo step as the move.
+      if (canvasState.mode === CanvasMode.Translating) {
+        rerouteConnectors(translateIdsRef.current);
+      } else if (canvasState.mode === CanvasMode.Resizing) {
+        rerouteConnectors([...self.presence.selection]);
+      }
 
       if (panLastPointRef.current != null) {
         panLastPointRef.current = null;
@@ -1068,6 +1270,16 @@ export default function Canvas({ boardId }: CanvasProps) {
         setCanvasState({ mode: CanvasMode.None });
       } else if (canvasState.mode === CanvasMode.Pencil) {
         insertPath();
+      } else if (canvasState.mode === CanvasMode.Connecting) {
+        insertConnector(
+          canvasState.fromId,
+          canvasState.fromRow,
+          layerIdAtPoint(e.clientX, e.clientY),
+          canvasState.origin,
+          point
+        );
+        setConnectorHoverId(null);
+        setCanvasState({ mode: CanvasMode.None });
       } else if (canvasState.mode === CanvasMode.Inserting) {
         if (canvasState.origin != null) {
           insertLayer(
@@ -1104,6 +1316,8 @@ export default function Canvas({ boardId }: CanvasProps) {
       insertLayer,
       unselectLayers,
       insertPath,
+      insertConnector,
+      rerouteConnectors,
     ]
   );
 
@@ -1269,7 +1483,7 @@ export default function Canvas({ boardId }: CanvasProps) {
         y: window.innerHeight / 2,
       };
       e.preventDefault();
-      if (addImageFiles(files, point) === 0) pasteLayers();
+      if (addImageFiles(files, point, true) === 0) pasteLayers();
     }
 
     document.addEventListener("keydown", onKeyDown);
@@ -1309,7 +1523,8 @@ export default function Canvas({ boardId }: CanvasProps) {
       : isSpacePressed || canvasState.mode === CanvasMode.Hand
         ? "grab"
         : canvasState.mode === CanvasMode.Pencil ||
-            canvasState.mode === CanvasMode.Inserting
+            canvasState.mode === CanvasMode.Inserting ||
+            canvasState.mode === CanvasMode.Connecting
           ? "crosshair"
           : canvasState.mode === CanvasMode.Eraser
             ? "cell"
@@ -1345,10 +1560,11 @@ export default function Canvas({ boardId }: CanvasProps) {
         if (!e.dataTransfer.types.includes("Files")) return;
         e.preventDefault();
         setIsDraggingFile(false);
-        const added = addImageFiles(Array.from(e.dataTransfer.files), {
-          x: e.clientX,
-          y: e.clientY,
-        });
+        const added = addImageFiles(
+          Array.from(e.dataTransfer.files),
+          { x: e.clientX, y: e.clientY },
+          false
+        );
         if (added === 0) toast.error("Only image files can be dropped here");
       }}
     >
@@ -1433,7 +1649,11 @@ export default function Canvas({ boardId }: CanvasProps) {
               selectionColor={layerIdsToColorSelection[layerId]}
             />
           ))}
-          <SelectionBox onResizeHandlePointerDown={onResizeHandlePointerDown} />
+          <SelectionBox
+            onResizeHandlePointerDown={onResizeHandlePointerDown}
+            onConnectStart={onConnectStart}
+            isConnecting={canvasState.mode === CanvasMode.Connecting}
+          />
           {canvasState.mode === CanvasMode.SelectionNet &&
             canvasState.current != null && (
               <rect
@@ -1472,6 +1692,19 @@ export default function Canvas({ boardId }: CanvasProps) {
                 )}
               />
             ))}
+          {canvasState.mode === CanvasMode.Connecting && (
+            <line
+              className="pointer-events-none"
+              x1={canvasState.origin.x}
+              y1={canvasState.origin.y}
+              x2={canvasState.current.x}
+              y2={canvasState.current.y}
+              stroke="#6366f1"
+              strokeWidth={1.75 / camera.zoom}
+              strokeDasharray={`${6 / camera.zoom} ${5 / camera.zoom}`}
+              strokeLinecap="round"
+            />
+          )}
           {connectorHoverBounds && (
             <rect
               className="pointer-events-none fill-indigo-500/5 stroke-indigo-500"

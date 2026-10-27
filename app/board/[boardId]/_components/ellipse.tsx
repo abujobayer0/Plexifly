@@ -1,5 +1,11 @@
 import React from "react";
-import { colorToCss, focusLayerLabel } from "@/lib/utils";
+import {
+  SOFT_SHADOW,
+  colorToCss,
+  focusLayerLabel,
+  shadeColor,
+  tintColor,
+} from "@/lib/utils";
 import { EllipseLayer } from "@/types/canvas";
 import { ShapeLabel } from "./shape-label";
 
@@ -17,26 +23,26 @@ export const Ellipse = ({
   selectionColor,
 }: EllipseProps) => {
   const { x, y, width, height, fill, value } = layer;
-  const color = fill ? colorToCss(fill) : "#000";
+  const base = fill ?? { r: 30, g: 30, b: 30 };
 
+  // The layer color reads as the outline; the body is a soft tint of it.
   return (
     <g
       onPointerDown={(e) => onPointerDown(e, id)}
       onDoubleClick={() => focusLayerLabel(id)}
     >
       <ellipse
-        className="hover:opacity-90"
         style={{
           transform: `translate(${x}px, ${y}px)`,
+          filter: SOFT_SHADOW,
         }}
         cx={width / 2}
         cy={height / 2}
-        rx={width / 2}
-        ry={height / 2}
-        strokeWidth={3}
-        stroke={selectionColor || color}
-        fill="transparent"
-        strokeLinecap="round"
+        rx={Math.max(width / 2 - 1, 0)}
+        ry={Math.max(height / 2 - 1, 0)}
+        strokeWidth={selectionColor ? 2.5 : 1.75}
+        stroke={selectionColor || colorToCss(base)}
+        fill={colorToCss(tintColor(base, 0.88))}
       />
       <ShapeLabel
         id={id}
@@ -45,7 +51,7 @@ export const Ellipse = ({
         width={width}
         height={height}
         value={value}
-        color={color}
+        color={colorToCss(shadeColor(base, 0.35))}
         inset={{ x: width * 0.15, y: height * 0.15 }}
       />
     </g>

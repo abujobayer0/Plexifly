@@ -124,6 +124,21 @@ export type LineLayer = {
   // Connector attachments: ids of the layers this line starts/ends on.
   startId?: string;
   endId?: string;
+  // Table row each end attaches to (ERD-style field links).
+  startRow?: number;
+  endRow?: number;
+  // Set on attached connectors: draw as a right-angle path that runs
+  // horizontally ("h") or vertically ("v") between the two box sides.
+  elbow?: "h" | "v";
+  // Which side of each attached item the connector leaves / enters.
+  startSide?: "left" | "right" | "top" | "bottom";
+  endSide?: "left" | "right" | "top" | "bottom";
+  // Routed path around obstacles, relative to (x, y). Present on attached
+  // connectors after a full route; the first/last points are the endpoints.
+  waypoints?: number[][];
+  // Center of the label chip, relative to (x, y); chosen by the router so
+  // chips sit on a straight run of their own arrow, clear of other items.
+  labelAt?: number[];
   value?: string;
 };
 
@@ -219,6 +234,14 @@ export type CanvasState =
   | {
       mode: CanvasMode.Eraser;
       isErasing?: boolean;
+    }
+  | {
+      // Dragging an arrow out of a selected item's connect handle.
+      mode: CanvasMode.Connecting;
+      fromId: string;
+      fromRow?: number;
+      origin: Point;
+      current: Point;
     };
 
 export enum CanvasMode {
@@ -231,6 +254,7 @@ export enum CanvasMode {
   Pencil,
   Hand,
   Eraser,
+  Connecting,
 }
 
 export type Layer =

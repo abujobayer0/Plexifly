@@ -1,9 +1,5 @@
 import React from "react";
-import {
-  colorToCss,
-  focusLayerLabel,
-  getContrastingTextColor,
-} from "@/lib/utils";
+import { SOFT_SHADOW, focusLayerLabel, shapePalette } from "@/lib/utils";
 import { LayerType, PolygonLayer } from "@/types/canvas";
 import { ShapeLabel } from "./shape-label";
 
@@ -52,8 +48,10 @@ export const PolygonShape = ({
   selectionColor,
 }: PolygonShapeProps) => {
   const { x, y, width, height, fill, type, value } = layer;
-  const color = fill ? colorToCss(fill) : "#ccc";
-  const stroke = selectionColor || "transparent";
+  const palette = shapePalette(fill ?? { r: 204, g: 204, b: 204 });
+  const color = palette.fill;
+  const stroke = selectionColor || palette.stroke;
+  const strokeWidth = selectionColor ? 2 : 1.25;
   const inset = LABEL_INSETS[type];
 
   let shape: React.ReactNode;
@@ -65,7 +63,7 @@ export const PolygonShape = ({
           d={`M0,${ry} A${width / 2},${ry} 0 0 1 ${width},${ry} L${width},${height - ry} A${width / 2},${ry} 0 0 1 0,${height - ry} Z`}
           fill={color}
           stroke={stroke}
-          strokeWidth={1}
+          strokeWidth={strokeWidth}
         />
         <ellipse
           cx={width / 2}
@@ -73,8 +71,8 @@ export const PolygonShape = ({
           rx={width / 2}
           ry={ry}
           fill={color}
-          stroke="rgba(0,0,0,0.2)"
-          strokeWidth={1.5}
+          stroke={stroke}
+          strokeWidth={strokeWidth}
         />
       </>
     );
@@ -86,7 +84,7 @@ export const PolygonShape = ({
           .join(" ")}
         fill={color}
         stroke={stroke}
-        strokeWidth={1}
+        strokeWidth={strokeWidth}
         strokeLinejoin="round"
       />
     );
@@ -97,10 +95,7 @@ export const PolygonShape = ({
       onPointerDown={(e) => onPointerDown(e, id)}
       onDoubleClick={() => focusLayerLabel(id)}
     >
-      <g
-        className="drop-shadow-md"
-        style={{ transform: `translate(${x}px, ${y}px)` }}
-      >
+      <g style={{ transform: `translate(${x}px, ${y}px)`, filter: SOFT_SHADOW }}>
         {shape}
       </g>
       <ShapeLabel
@@ -110,7 +105,7 @@ export const PolygonShape = ({
         width={width}
         height={height}
         value={value}
-        color={fill ? getContrastingTextColor(fill) : "#000"}
+        color={palette.text}
         inset={{ x: width * inset.x, y: height * inset.y }}
       />
     </g>

@@ -121,11 +121,124 @@ export function findIntersectingLayersWithRectangle(
   return ids;
 }
 
+// Merges boxes that touch or sit within `gap` of each other into their
+// combined bounding boxes, repeating until no clusters are that close.
+export function mergeIntoClusters(rects: XYWH[], gap: number): XYWH[] {
+  const near = (a: XYWH, b: XYWH) =>
+    a.x <= b.x + b.width + gap &&
+    b.x <= a.x + a.width + gap &&
+    a.y <= b.y + b.height + gap &&
+    b.y <= a.y + a.height + gap;
+
+  let clusters = rects.map((r) => ({ ...r }));
+  let merged = true;
+  while (merged) {
+    merged = false;
+    const next: XYWH[] = [];
+    for (const rect of clusters) {
+      const hit = next.find((c) => near(c, rect));
+      if (hit) {
+        const right = Math.max(hit.x + hit.width, rect.x + rect.width);
+        const bottom = Math.max(hit.y + hit.height, rect.y + rect.height);
+        hit.x = Math.min(hit.x, rect.x);
+        hit.y = Math.min(hit.y, rect.y);
+        hit.width = right - hit.x;
+        hit.height = bottom - hit.y;
+        merged = true;
+      } else {
+        next.push(rect);
+      }
+    }
+    clusters = next;
+  }
+  return clusters;
+}
+
+// Top-left position for a box of `size` as close as possible to
+// `preferredCenter` without overlapping any `occupied` box (keeping `gap`
+// between them). Searches outward in square rings on a grid; if nothing
+// nearby is free, places the box to the right of everything.
+export function findFreeSpot(
+  occupied: XYWH[],
+  size: { width: number; height: number },
+  preferredCenter: Point,
+  gap = 40
+): Point {
+  // Avoid whole groups, not just individual items, so new content never
+  // lands in the gaps inside an existing diagram or template.
+  occupied = mergeIntoClusters(occupied, gap);
+  const origin = {
+    x: preferredCenter.x - size.width / 2,
+    y: preferredCenter.y - size.height / 2,
+  };
+  const fits = (x: number, y: number) =>
+    occupied.every(
+      (r) =>
+        x + size.width + gap <= r.x ||
+        x >= r.x + r.width + gap ||
+        y + size.height + gap <= r.y ||
+        y >= r.y + r.height + gap
+    );
+
+  if (fits(origin.x, origin.y)) return origin;
+
+  const step = 40;
+  const maxRings = 80;
+  for (let ring = 1; ring <= maxRings; ring++) {
+    let best: Point | null = null;
+    let bestDistance = Infinity;
+    const consider = (i: number, j: number) => {
+      const x = origin.x + i * step;
+      const y = origin.y + j * step;
+      const distance = Math.hypot(i, j);
+      if (distance < bestDistance && fits(x, y)) {
+        best = { x, y };
+        bestDistance = distance;
+      }
+    };
+    for (let i = -ring; i <= ring; i++) {
+      consider(i, -ring);
+      consider(i, ring);
+    }
+    for (let j = -ring + 1; j <= ring - 1; j++) {
+      consider(-ring, j);
+      consider(ring, j);
+    }
+    if (best) return best;
+  }
+
+  const right = Math.max(...occupied.map((r) => r.x + r.width));
+  return { x: right + gap, y: origin.y };
+}
+
 // Mixes a color toward white; amount 0 keeps it, 1 gives white.
 export function tintColor(color: Color, amount: number): Color {
   const mix = (c: number) => Math.round(c + (255 - c) * amount);
   return { r: mix(color.r), g: mix(color.g), b: mix(color.b) };
 }
+
+// Mixes a color toward black; amount 0 keeps it, 1 gives black.
+export function shadeColor(color: Color, amount: number): Color {
+  const mix = (c: number) => Math.round(c * (1 - amount));
+  return { r: mix(color.r), g: mix(color.g), b: mix(color.b) };
+}
+
+const luminance = (c: Color) => 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
+
+// Shared look for filled shapes: the fill, a thin border in a darker shade
+// of the same hue, and readable label text.
+export function shapePalette(fill: Color) {
+  const light = luminance(fill) > 170;
+  return {
+    fill: colorToCss(fill),
+    stroke: colorToCss(shadeColor(fill, light ? 0.32 : 0.2)),
+    text: light ? colorToCss(shadeColor(fill, 0.78)) : "#ffffff",
+  };
+}
+
+// Soft two-layer shadow used by shapes, tables and images.
+export const SOFT_SHADOW =
+  "drop-shadow(0 1px 1px rgba(15,23,42,0.06)) drop-shadow(0 4px 10px rgba(15,23,42,0.07))";
 
 // Puts the caret in a layer's editable label (shapes, frames).
 export function focusLayerLabel(layerId: string) {

@@ -149,7 +149,8 @@ export const SelectionTools = memo(
     }
 
     const x = selectionBounds.width / 2 + selectionBounds.x;
-    const y = selectionBounds.y - 12 / camera.zoom;
+    // Clear the top connect handle (22 units out, 7 radius) plus a margin.
+    const y = selectionBounds.y - 30 - 10 / camera.zoom;
 
     return (
       <div
